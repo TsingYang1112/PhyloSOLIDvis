@@ -8,7 +8,42 @@ Encoding: UTF-8
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
 Depends: R (>= 4.0)
-Imports: ape, circlize, ComplexHeatmap, converTree, cowplot, dplyr, ggplot2, ggforce, ggnewscale, ggridges, ggtext, ggtree, ggtreeExtra, grid, gridExtra, gsubfn, paletteer, pals, patchwork, pheatmap, phylogram, Polychrome, rlang, stringr, tibble, tidyr, treeio
-Remotes: github::xiayh17/converTree
-Suggests: knitr, optparse, rmarkdown, testthat
+Imports: 
+    ape,
+    circlize,
+    ComplexHeatmap,
+    converTree,
+    cowplot,
+    dplyr,
+    ggforce,
+    ggplot2,
+    ggnewscale,
+    ggridges,
+    ggtext,
+    ggtree,
+    ggtreeExtra,
+    grid,
+    gridExtra,
+    gsubfn,
+    gtable,
+    optparse,
+    paletteer,
+    pals,
+    patchwork,
+    pheatmap,
+    phylogram,
+    Polychrome,
+    rlang,
+    scales,
+    stringr,
+    tibble,
+    tidyr,
+    treeio,
+    uuid
+Remotes:
+    github::xiayh17/converTree
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat
 VignetteBuilder: knitr
