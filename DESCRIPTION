@@ -1,0 +1,69 @@
+Package: PhyloSOLIDvis
+Title: Visualization Suite for PhyloSOLID Phylogenetic Trees
+Version: 1.0.0
+Authors@R: c(
+    person("Qing", "Yang", 
+           email = "qing.yang@westlake.edu.cn", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0005-7366-6879")),
+    person("Westlake University", 
+           role = "cph",
+           comment = "School of Life Sciences")
+)
+Description: Generate circular (circos-style) phylogenetic tree visualizations 
+    with integrated mutation heatmaps, cell annotations, and genotype flipping markers.
+    Designed for PhyloSOLID output. Implements recursive clone partitioning, adaptive 
+    parameter estimation, and publication-ready figures.
+License: MIT + file LICENSE
+URL: https://github.com/yourusername/PhyloSOLIDvis
+BugReports: https://github.com/yourusername/PhyloSOLIDvis/issues
+Acknowledgments: 
+    We thank Yonghe Xia for initial conceptualization of the visualization approach 
+    and for providing the converTree package (https://github.com/xiayh17/converTree), 
+    which is used for tree construction from conflict-free matrices.
+
+Depends:
+    R (>= 4.0)
+
+Imports:
+    ape (>= 5.6),
+    circlize (>= 0.4.15),
+    ComplexHeatmap (>= 2.14.0),
+    converTree (>= 0.1.0),
+    cowplot (>= 1.1.1),
+    dplyr (>= 1.0.0),
+    ggplot2 (>= 3.4.0),
+    ggforce (>= 0.4.1),
+    ggnewscale (>= 0.4.8),
+    ggridges (>= 0.5.4),
+    ggtext (>= 0.1.2),
+    ggtree (>= 3.6.0),
+    ggtreeExtra (>= 1.8.0),
+    grid,
+    gridExtra (>= 2.3),
+    gsubfn (>= 0.7),
+    paletteer (>= 1.4),
+    pals (>= 1.7),
+    patchwork (>= 1.1.2),
+    pheatmap (>= 1.0.12),
+    phylogram (>= 2.1.0),
+    Polychrome (>= 1.5),
+    rlang (>= 1.0),
+    stringr (>= 1.5.0),
+    tibble (>= 3.1.0),
+    tidyr (>= 1.2.0),
+    treeio (>= 1.20.0)
+
+Suggests:
+    knitr,
+    optparse,
+    rmarkdown,
+    testthat (>= 3.0.0)
+
+VignetteBuilder: knitr
+Encoding: UTF-8
+RoxygenNote: 7.2.3
+Roxygen: list(markdown = TRUE)
+
+Remotes:
+    github::xiayh17/converTree
