@@ -29,6 +29,7 @@ devtools::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
 ## Quick Start
 
 ```r
+library(ggplot2)
 library(PhyloSOLIDvis)
 
 result <- plot_circos(
