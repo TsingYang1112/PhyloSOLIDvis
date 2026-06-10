@@ -1,5 +1,8 @@
 # PhyloSOLIDvis
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![R Version](https://img.shields.io/badge/R-%3E%3D%204.0-blue.svg)](https://www.r-project.org/)
+
 **Visualization Suite for PhyloSOLID Phylogenetic Trees**
 
 ## Overview
@@ -7,40 +10,23 @@
 PhyloSOLIDvis generates publication-ready circular (circos-style) phylogenetic tree visualizations with:
 
 - ✨ **Circos-style circular plots** with integrated mutation heatmaps
-- 🔬 **Cell annotation layers** (types, clusters, samples, tumor scores)
+- 🔬 **Cell annotation layers** (types, clusters, samples, tumor scores, B cell proportions)
 - 🧬 **Genotype flipping visualization** (input vs inferred states)
 - 🎯 **Target mutation highlighting**
 - 📊 **Adaptive parameter estimation**
 
 ## Installation
 
-### Prerequisites
-
-Make sure you have R (>= 4.0) installed.
-
 ### One-line installation (recommended)
 
 ```r
-install.packages("remotes")
-remotes::install_github("TsingYang1112/PhyloSOLIDvis")
+remotes::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
 ```
 
 ### Alternative with devtools
 
 ```r
-devtools::install_github("TsingYang1112/PhyloSOLIDvis")
-```
-
-### Manual dependency installation (if needed)
-
-```r
-# Install converTree from GitHub (required)
-remotes::install_github("xiayh17/converTree")
-
-# Install Bioconductor packages
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install(c("ggtree", "ggtreeExtra", "treeio", "ComplexHeatmap"))
+devtools::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
 ```
 
 ## Quick Start
@@ -51,7 +37,23 @@ library(PhyloSOLIDvis)
 result <- plot_circos(
   inputpath = "path/to/PhyloSOLID/output/",
   outputpath = "path/to/figures/",
-  annotation_file = "path/to/annotations.txt"
+  annotation_file = "path/to/annotations.txt",
+  target_mut = "chr11_65426524_T_C"
+)
+```
+
+### Using built-in demo data
+
+```r
+# Locate demo data
+demo_path <- system.file("examples/input", package = "PhyloSOLIDvis")
+list.files(demo_path)
+
+# Run with demo data (requires annotation file)
+result <- plot_circos(
+  inputpath = demo_path,
+  outputpath = "output/",
+  annotation_file = "path/to/annotation.txt"
 )
 ```
 
@@ -63,12 +65,14 @@ result <- plot_circos(
 | `outputpath` | (required) | Path to output directory for saving plots |
 | `annotation_file` | (required) | Path to cell annotation file (TSV format) |
 | `target_mut` | "no" | Target mutation ID to highlight |
-| `tip_label_offset` | 10 | Offset distance for tip labels |
+| `selected_mutlist` | "all" | Comma-separated list of mutations to include |
+| `manual_fp_file` | "no" | Path to manual false positive annotation file |
+| `tip_label_offset` | 6 | Offset distance for tip labels |
 | `tip_label_size` | 2.5 | Font size for tip labels |
 | `tip_point_size` | 0.5 | Size of tip points |
 | `heatmap_width` | 0.3 | Width of heatmap track |
-| `heatmap_circos_offset` | 0.04 | Offset for heatmap from tree |
-| `flipping_point_size` | 0.2 | Size of flipping marker points |
+| `heatmap_circos_offset` | 0.05 | Offset for heatmap from tree |
+| `flipping_point_size` | 1.3 | Size of flipping marker points |
 | `plot_height` | 12 | Output plot height (inches) |
 | `plot_width` | 18 | Output plot width (inches) |
 | `verbose` | TRUE | Print progress messages |
@@ -84,7 +88,7 @@ result <- plot_circos(
 
 ### Annotation File Format
 
-The annotation file (TSV format) should contain a `barcode` column and can include any of the following optional columns:
+The annotation file (TSV format) should contain a `barcode` column and can include:
 
 | Column | Description |
 |--------|-------------|
@@ -98,19 +102,20 @@ The annotation file (TSV format) should contain a `barcode` column and can inclu
 
 | File | Description |
 |------|-------------|
-| `target_*.svg/pdf` | Main circular plot |
-| `legend_components.circos_annotation.svg/pdf` | Legend |
+| `No_target.circle_tree_output_as_point.*.svg/pdf` | Main circular plot |
+| `legend_components.circos_annotation.svg/pdf` | Circos annotation legend |
+| `legend_components.total_flipping_count.svg/pdf` | Flipping count legend |
 | `sorted_cf_matrix.txt` | Sorted mutation matrix |
-| `clone_and_subclone_table.txt` | Clone assignments |
 | `ordered_metadata_for_heatmap.txt` | Heatmap ordering data |
+| `CNVtree_data_clone_order_tree.rds` | Tree structure data |
 | `df_muts_corresponding_to_ordered_tiplabels_by_anticlockwise.txt` | Mutation-cell mapping |
 
 ## Example
 
 ```r
-# Basic usage
 library(PhyloSOLIDvis)
 
+# Basic usage
 result <- plot_circos(
   inputpath = "results/phylosolid/",
   outputpath = "figures/circos/",
@@ -124,33 +129,30 @@ result <- plot_circos(
   outputpath = "figures/circos/",
   annotation_file = "data/annotations.txt",
   target_mut = "chr11_65426524_T_C",
-  tip_label_offset = 12,
+  tip_label_offset = 8,
   tip_label_size = 3
 )
-
-# Check output files
-print(result$output_files)
 ```
 
 ## Troubleshooting
 
 ### Network issues during installation
 
-If you encounter network errors, try using a CRAN mirror:
+Try using a CRAN mirror:
 
 ```r
 options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 options(BioC_mirror = "https://mirrors.tuna.tsinghua.edu.cn/bioconductor")
-remotes::install_github("TsingYang1112/PhyloSOLIDvis")
+remotes::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
 ```
 
 ### Missing dependencies
 
-If dependencies fail to install, install them manually:
+Install dependencies manually:
 
 ```r
 # CRAN packages
-install.packages(c("ape", "circlize", "cowplot", "dplyr", "ggplot2"))
+install.packages(c("ape", "circlize", "cowplot", "dplyr", "ggplot2", "tidyr"))
 
 # Bioconductor packages
 BiocManager::install(c("ggtree", "ggtreeExtra", "treeio", "ComplexHeatmap"))
