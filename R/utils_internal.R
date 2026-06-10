@@ -1,8 +1,6 @@
-# Internal utility functions (not exported)
-
 #' Remove zero barcodes from CF matrix
 #' @keywords internal
-.remove_zero_barcode <- function(cffile) {
+remove_zero_barcode <- function(cffile) {
   cffile_no0 <- paste0(cffile, ".no0")
   lines <- readLines(cffile)
   filtered_lines <- suppressWarnings(
@@ -16,7 +14,7 @@
 
 #' Process annotations and generate colors
 #' @keywords internal
-.process_annotations <- function(df_all_info) {
+process_annotations <- function(df_all_info) {
   result <- list()
   
   if ("cluster_info" %in% colnames(df_all_info)) {
@@ -85,7 +83,7 @@
 
 #' Add target clone information
 #' @keywords internal
-.add_target_clone <- function(leaf_df, cf_tableno0_sorted, target_mut) {
+add_target_clone <- function(leaf_df, cf_tableno0_sorted, target_mut) {
   target_clone <- cf_tableno0_sorted[cf_tableno0_sorted[[target_mut]] == 1, "cellIDxmutID"]
   leaf_df <- leaf_df %>% 
     dplyr::mutate(
@@ -96,7 +94,7 @@
 
 #' Sort leaf data frame
 #' @keywords internal
-.sort_leaf_df <- function(leaf_df, cf_tableno0_sorted) {
+sort_leaf_df <- function(leaf_df, cf_tableno0_sorted) {
   mutation_mat <- cf_tableno0_sorted[, -1, drop = FALSE]
   leaf_df$mutation_count <- rowSums(mutation_mat[leaf_df$label, , drop = FALSE])
   
@@ -111,7 +109,7 @@
 
 #' Recursive clone partition
 #' @keywords internal
-.recursive_clone_partition <- function(available_items, mat, parent_members = NULL, by_row = TRUE) {
+recursive_clone_partition <- function(available_items, mat, parent_members = NULL, by_row = TRUE) {
   if (length(available_items) == 0) return(NULL)
   
   if (!is.null(parent_members)) {
@@ -156,7 +154,7 @@
   
   unused_items <- setdiff(available_items, clone_items)
   if (length(unused_items) > 0) {
-    parallel_clone <- .recursive_clone_partition(unused_items, mat, by_row = by_row)
+    parallel_clone <- recursive_clone_partition(unused_items, mat, by_row = by_row)
     if (!is.null(parallel_clone)) {
       current_clone$parallel <- parallel_clone
     }
@@ -167,7 +165,7 @@
 
 #' Extract ordering from clone structure
 #' @keywords internal
-.extract_ordering <- function(clone_structure) {
+extract_mutation_order <- function(clone_structure) {
   ordered_items <- c()
   
   process_clone <- function(clone) {
@@ -185,7 +183,7 @@
   return(ordered_items)
 }
 
-#' Format flipping label
+#' Format flipping label for legend
 #' @keywords internal
 format_flipping_label <- function(x) {
   x <- gsub("0", "non-mutant", x)
@@ -207,7 +205,7 @@ insert_newline <- function(text, n = 180) {
 
 #' Save outputs
 #' @keywords internal
-.save_outputs <- function(plot_result, outputpath, target_mut, plot_width, plot_height) {
+save_outputs <- function(plot_result, outputpath, target_mut, plot_width, plot_height) {
   pdf_lastfix <- paste0(format(Sys.time(), "%m%d_%H%M%S"), "_", substr(uuid::UUIDgenerate(), 1, 8))
   
   if (target_mut == "no") {
@@ -218,10 +216,46 @@ insert_newline <- function(text, n = 180) {
   
   pdf_filename <- gsub("svg$", "pdf", svg_filename)
   
-  ggsave(filename = svg_filename, plot = plot_result$main_plot, 
+  ggplot2::ggsave(filename = svg_filename, plot = plot_result$main_plot, 
          width = plot_width * 2, height = plot_height * 2)
-  ggsave(filename = pdf_filename, plot = plot_result$main_plot, 
+  ggplot2::ggsave(filename = pdf_filename, plot = plot_result$main_plot, 
          width = plot_width * 2, height = plot_height * 2)
   
   return(c(svg_filename, pdf_filename))
+}
+
+#' Find zero barcodes (rows with all zeros)
+#' @keywords internal
+find_zero_barcode <- function(table) {
+  zero_barcode <- rownames(table)[rowSums(table) == 0]
+  return(zero_barcode)
+}
+
+#' Find zero mutations (columns with all zeros)
+#' @keywords internal
+find_zero_mutation <- function(table) {
+  zero_mutation <- colnames(table)[colSums(table) == 0]
+  return(zero_mutation)
+}
+
+#' Trim node label for display
+#' @keywords internal
+trim_label <- function(label_str, target_mut, default_n = 2) {
+  if (is.na(label_str) || label_str == "") return("")
+  
+  parts <- unlist(strsplit(label_str, "\\|"))
+  
+  if (target_mut %in% parts) {
+    parts_trim <- target_mut
+  } else {
+    parts_trim <- head(parts, default_n)
+  }
+  
+  paste(parts_trim, collapse = "\n")
+}
+
+#' Null coalescing operator
+#' @keywords internal
+`%||%` <- function(x, y) {
+  if (is.null(x)) y else x
 }

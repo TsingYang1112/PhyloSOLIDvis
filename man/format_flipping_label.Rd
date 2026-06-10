@@ -2,11 +2,11 @@
 % Please edit documentation in R/utils_internal.R
 \name{format_flipping_label}
 \alias{format_flipping_label}
-\title{Format flipping label}
+\title{Format flipping label for legend}
 \usage{
 format_flipping_label(x)
 }
 \description{
-Format flipping label
+Format flipping label for legend
 }
 \keyword{internal}

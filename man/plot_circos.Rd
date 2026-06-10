@@ -2,86 +2,60 @@
 % Please edit documentation in R/plot_circos.R
 \name{plot_circos}
 \alias{plot_circos}
-\title{Create circular phylogenetic tree visualization}
+\title{Plot circular phylogenetic tree}
 \usage{
 plot_circos(
   inputpath,
   outputpath,
   annotation_file,
   target_mut = "no",
-  conflict_muts = NULL,
   selected_mutlist = "all",
-  adding_mut_file = "no",
   manual_fp_file = "no",
-  barcode_file = "no",
-  barcode_name = "no",
-  tip_label_offset = 10,
+  tip_label_offset = 6,
   tip_label_size = 2.5,
   tip_point_size = 0.5,
   heatmap_width = 0.3,
-  heatmap_circos_offset = 0.04,
-  flipping_point_size = 0.2,
+  heatmap_circos_offset = 0.05,
+  flipping_point_size = 1.3,
   plot_height = 12,
   plot_width = 18,
   verbose = TRUE
 )
 }
 \arguments{
-\item{inputpath}{Path to directory containing PhyloSOLID output files}
+\item{inputpath}{Path to input data directory}
 
-\item{outputpath}{Path to output directory for saving plots}
+\item{outputpath}{Path to output directory}
 
-\item{annotation_file}{Path to cell annotation file (TSV format)}
+\item{annotation_file}{Path to annotation file}
 
-\item{target_mut}{Target mutation ID to highlight (default: "no")}
+\item{target_mut}{Target mutation to highlight (default: "no")}
 
-\item{conflict_muts}{Comma-separated conflict mutations (default: NULL)}
+\item{selected_mutlist}{Selected mutations (default: "all")}
 
-\item{selected_mutlist}{Mutations to include or "all" (default: "all")}
+\item{manual_fp_file}{Manual false positive file (default: "no")}
 
-\item{adding_mut_file}{Additional mutation file path (default: "no")}
+\item{tip_label_offset}{Offset for tip labels (default: 6)}
 
-\item{manual_fp_file}{Manual false positive file path (default: "no")}
-
-\item{barcode_file}{Barcode file for highlighting (default: "no")}
-
-\item{barcode_name}{Barcode identifier (default: "no")}
-
-\item{tip_label_offset}{Offset distance for tip labels (default: 10)}
-
-\item{tip_label_size}{Font size for tip labels (default: 2.5)}
+\item{tip_label_size}{Size of tip labels (default: 2.5)}
 
 \item{tip_point_size}{Size of tip points (default: 0.5)}
 
-\item{heatmap_width}{Width of heatmap track (default: 0.3)}
+\item{heatmap_width}{Width of heatmap (default: 0.3)}
 
-\item{heatmap_circos_offset}{Offset for heatmap (default: 0.04)}
+\item{heatmap_circos_offset}{Offset for heatmap (default: 0.05)}
 
-\item{flipping_point_size}{Size of flipping marker points (default: 0.2)}
+\item{flipping_point_size}{Size of flipping points (default: 1.3)}
 
-\item{plot_height}{Height of output plot in inches (default: 12)}
+\item{plot_height}{Plot height (default: 12)}
 
-\item{plot_width}{Width of output plot in inches (default: 18)}
+\item{plot_width}{Plot width (default: 18)}
 
-\item{verbose}{Print progress messages (default: TRUE)}
+\item{verbose}{Print progress (default: TRUE)}
 }
 \value{
-Invisibly returns a list containing the plot, legend, data, parameters, and output files
+Invisible list with plot results
 }
 \description{
-Generates a publication-ready circular (circos-style) plot from PhyloSOLID output,
-featuring mutation heatmaps, cell annotations, and genotype flipping markers.
-}
-\examples{
-\dontrun{
-result <- plot_circos(
-  inputpath = "results/phylosolid/",
-  outputpath = "figures/",
-  annotation_file = "data/annotations.txt"
-)
-}
-
-}
-\author{
-Qing Yang \href{mailto:qing.yang@nyu.edu}{qing.yang@nyu.edu}, Yonghe Xia \href{mailto:yonghe.xia@nyu.edu}{yonghe.xia@nyu.edu}
+Plot circular phylogenetic tree
 }

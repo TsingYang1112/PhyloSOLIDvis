@@ -9,24 +9,6 @@
 Generate publication-ready circular phylogenetic tree visualizations with
 integrated mutation heatmaps, cell annotations, and genotype flipping markers.
 }
-\section{Main Features}{
-
-\itemize{
-\item \strong{Circos Plot}: Circular tree visualization with mutation heatmaps
-\item \strong{Clone Partitioning}: Recursive algorithm for optimal ordering
-\item \strong{Annotation Integration}: Cell types, clusters, samples, scores
-\item \strong{Genotype Flipping}: Visualize input vs inferred discrepancies
-\item \strong{Adaptive Parameters}: Auto-estimation based on data dimensions
-}
-}
-
-\section{Acknowledgments}{
-
-The author thanks Yonghe Xia for initial conceptualization of the visualization
-approach and for providing the converTree package, which is used for tree
-construction from conflict-free matrices.
-}
-
 \author{
 \strong{Maintainer}: Qing Yang \email{qing.yang@westlake.edu.cn}
 
