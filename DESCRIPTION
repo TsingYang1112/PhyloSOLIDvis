@@ -1,7 +1,7 @@
 Package: PhyloSOLIDvis
 Title: Visualization Suite for PhyloSOLID Phylogenetic Trees
 Version: 1.0.0
-Authors@R: c(person("Qing", "Yang", email = "yangqing@westlake.edu.cn", role = c("aut", "cre")), person("Westlake University", role = "cph"))
+Authors@R: c(person("Qing", "Yang", email = "qing.yang@westlake.edu.cn", role = c("aut", "cre")), person("Westlake University", role = "cph"))
 Description: Generate circular phylogenetic tree visualizations with integrated mutation heatmaps, cell annotations, and genotype flipping markers. Designed for PhyloSOLID output.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -30,13 +30,15 @@ Imports:
     patchwork,
     pheatmap,
     phylogram,
+    RColorBrewer,
     scales,
     stringr,
+    svglite,
     tibble,
     tidyr,
     treeio,
+    utils,
     uuid
 Remotes:
     github::xiayh17/converTree
-Suggests:
-    testthat
+VignetteBuilder: knitr

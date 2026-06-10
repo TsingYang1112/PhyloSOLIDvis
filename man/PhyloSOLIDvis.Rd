@@ -10,7 +10,7 @@ Generate publication-ready circular phylogenetic tree visualizations with
 integrated mutation heatmaps, cell annotations, and genotype flipping markers.
 }
 \author{
-\strong{Maintainer}: Qing Yang \email{yangqing@westlake.edu.cn}
+\strong{Maintainer}: Qing Yang \email{qing.yang@westlake.edu.cn}
 
 Other contributors:
 \itemize{
