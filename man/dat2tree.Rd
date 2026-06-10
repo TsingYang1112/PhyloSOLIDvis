@@ -7,7 +7,7 @@
 dat2tree(dat)
 }
 \arguments{
-\item{dat}{Tree data frame with node, parent, and label columns}
+\item{dat}{Tree data frame from converTree or phylo object}
 }
 \value{
 Phylogenetic tree object (phylo class)
