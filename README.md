@@ -1,8 +1,5 @@
 # PhyloSOLIDvis
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![R Version](https://img.shields.io/badge/R-%3E%3D%204.0-blue.svg)](https://www.r-project.org/)
-
 **Visualization Suite for PhyloSOLID Phylogenetic Trees**
 
 ## Overview
@@ -169,7 +166,7 @@ The author thanks **Yonghe Xia** for initial conceptualization of the visualizat
 
 **Qing Yang**  
 *Westlake University, School of Life Sciences*  
-Email: qing.yang@westlake.edu.cn  
+Email: yangqing@westlake.edu.cn  
 ORCID: 0009-0005-7366-6879  
 GitHub: [@TsingYang1112](https://github.com/TsingYang1112)
 
@@ -179,14 +176,7 @@ MIT © Westlake University
 
 ## Citation
 
-If you use PhyloSOLIDvis in your research, please cite:
+If you use PhyloSOLID in your research, please cite:
 
-```bibtex
-@software{Yang_PhyloSOLIDvis_2024,
-  author = {Qing Yang},
-  title = {PhyloSOLIDvis: Visualization Suite for PhyloSOLID Phylogenetic Trees},
-  year = {2024},
-  publisher = {GitHub},
-  url = {https://github.com/TsingYang1112/PhyloSOLIDvis}
-}
-```
+1. Yang, Q. et al. PhyloSOLID: Robust phylogeny reconstruction from single-cell data despite inherent error and sparsity. (2026) doi:10.64898/2026.02.04.703905.
+
