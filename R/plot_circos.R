@@ -111,7 +111,9 @@ plot_circos <- function(
     cluster_levels <- sort(unique(df_cluster$cluster))
     df_cluster$cluster <- factor(df_cluster$cluster, levels = cluster_levels)
     set.seed(42)
-    df_cluster_color <- grDevices::rgb(runif(length(cluster_levels)), runif(length(cluster_levels)), runif(length(cluster_levels)))
+    df_cluster_color <- grDevices::rgb(runif(length(cluster_levels)), 
+                                       runif(length(cluster_levels)), 
+                                       runif(length(cluster_levels)))
     names(df_cluster_color) <- cluster_levels
     anno_color <- c(anno_color, df_cluster_color)
   }
@@ -124,7 +126,10 @@ plot_circos <- function(
     colnames(df_celltype) <- c("label", "celltype")
     celltype_levels <- sort(unique(df_celltype$celltype))
     df_celltype$celltype <- factor(df_celltype$celltype, levels = celltype_levels)
-    df_celltype_color <- paletteer::paletteer_d("ggthemes::stata_s1rcolor")[seq_along(celltype_levels)]
+    set.seed(142)
+    df_celltype_color <- grDevices::rgb(runif(length(celltype_levels)), 
+                                        runif(length(celltype_levels)), 
+                                        runif(length(celltype_levels)))
     names(df_celltype_color) <- celltype_levels
     anno_color <- c(anno_color, df_celltype_color)
   }
@@ -614,9 +619,10 @@ plot_circos <- function(
     pdf_filename <- file.path(outputpath, paste0("target_", target_mut, ".circle_tree_output_as_point.", pdf_lastfix, ".pdf"))
   }
   
-  ggplot2::ggsave(filename = svg_filename, plot = main_plot, 
+  p_final <- main_plot + theme(legend.position = "none")
+  ggplot2::ggsave(filename = svg_filename, plot = p_final, 
                   width = plot_width * 2, height = plot_height * 2)
-  ggplot2::ggsave(filename = pdf_filename, plot = main_plot, 
+  ggplot2::ggsave(filename = pdf_filename, plot = p_final, 
                   width = plot_width * 2, height = plot_height * 2)
   
   # Save circos annotation legend

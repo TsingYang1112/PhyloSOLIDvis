@@ -12,6 +12,12 @@ PhyloSOLIDvis generates publication-ready circular (circos-style) phylogenetic t
 - 🎯 **Target mutation highlighting**
 - 📊 **Adaptive parameter estimation**
 
+## Example Output
+
+Below is an example circos plot generated from PhyloSOLID output (351 cells, 17 mutations):
+
+![Circos Plot](inst/demo_circos.png)
+
 ## Installation
 
 ### One-line installation (recommended)
@@ -66,33 +72,45 @@ workdir/
 demo_path <- system.file("examples/input", package = "PhyloSOLIDvis")
 list.files(demo_path)
 
-# Run with demo data (requires annotation file)
+# Run with demo data using recommended parameters
 result <- plot_circos(
   inputpath = demo_path,
-  outputpath = "output/",
-  annotation_file = "path/to/annotation.txt"
+  outputpath = "inst/examples/output",
+  annotation_file = "inst/examples/annotation.txt",
+  target_mut = "no",
+  selected_mutlist = "all",
+  manual_fp_file = "no",
+  tip_label_offset = 6,
+  tip_label_size = 2.5,
+  tip_point_size = 0.5,
+  heatmap_width = 0.3,
+  heatmap_circos_offset = 0.05,
+  flipping_point_size = 1.3,
+  plot_height = 12,
+  plot_width = 18,
+  verbose = TRUE
 )
 ```
 
 ## Parameters
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `inputpath` | (required) | Path to `phylo/` directory containing PhyloSOLID output files |
-| `outputpath` | (required) | Path to output directory for saving plots |
-| `annotation_file` | (required) | Path to cell annotation file (TSV format) |
-| `target_mut` | "no" | Target mutation ID to highlight |
-| `selected_mutlist` | "all" | Comma-separated list of mutations to include |
-| `manual_fp_file` | "no" | Path to manual false positive annotation file |
-| `tip_label_offset` | 10 | Offset distance for tip labels |
-| `tip_label_size` | 2.5 | Font size for tip labels |
-| `tip_point_size` | 0.5 | Size of tip points |
-| `heatmap_width` | 0.3 | Width of heatmap track |
-| `heatmap_circos_offset` | 0.04 | Offset for heatmap from tree |
-| `flipping_point_size` | 0.2 | Size of flipping marker points |
-| `plot_height` | 12 | Output plot height (inches) |
-| `plot_width` | 18 | Output plot width (inches) |
-| `verbose` | TRUE | Print progress messages |
+| Parameter | Default | Recommended for Demo | Description |
+|-----------|---------|---------------------|-------------|
+| `inputpath` | (required) | (required) | Path to `phylo/` directory containing PhyloSOLID output files |
+| `outputpath` | (required) | (required) | Path to output directory for saving plots |
+| `annotation_file` | (required) | (required) | Path to cell annotation file (TSV format) |
+| `target_mut` | "no" | "no" | Target mutation ID to highlight |
+| `selected_mutlist` | "all" | "all" | Comma-separated list of mutations to include |
+| `manual_fp_file` | "no" | "no" | Path to manual false positive annotation file |
+| `tip_label_offset` | 10 | 6 | Offset distance for tip labels |
+| `tip_label_size` | 2.5 | 2.5 | Font size for tip labels |
+| `tip_point_size` | 0.5 | 0.5 | Size of tip points |
+| `heatmap_width` | 0.3 | 0.3 | Width of heatmap track |
+| `heatmap_circos_offset` | 0.04 | 0.05 | Offset for heatmap from tree |
+| `flipping_point_size` | 0.2 | 1.3 | Size of flipping marker points |
+| `plot_height` | 12 | 12 | Output plot height (inches) |
+| `plot_width` | 18 | 18 | Output plot width (inches) |
+| `verbose` | TRUE | TRUE | Print progress messages |
 
 ## Required Input Files
 
@@ -121,7 +139,7 @@ The annotation file (TSV format) should contain a `barcode` column and can inclu
 
 | File | Description |
 |------|-------------|
-| `No_target.circle_tree_output_as_point.*.svg/pdf` | Main circular plot |
+| `No_target.circle_tree_output_as_point.*.svg/pdf` | Main circular plot (no legend embedded) |
 | `legend_components.circos_annotation.svg/pdf` | Circos annotation legend |
 | `legend_components.total_flipping_count.svg/pdf` | Flipping count legend |
 | `sorted_cf_matrix.txt` | Sorted mutation matrix |
@@ -151,6 +169,25 @@ result <- plot_circos(
   target_mut = "chr11_65426524_T_C",
   tip_label_offset = 8,
   tip_label_size = 3
+)
+
+# Using demo data with all parameters explicitly shown
+result <- plot_circos(
+  inputpath = system.file("examples/input", package = "PhyloSOLIDvis"),
+  outputpath = "demo_output/",
+  annotation_file = "path/to/annotation.txt",
+  target_mut = "no",
+  selected_mutlist = "all",
+  manual_fp_file = "no",
+  tip_label_offset = 6,
+  tip_label_size = 2.5,
+  tip_point_size = 0.5,
+  heatmap_width = 0.3,
+  heatmap_circos_offset = 0.05,
+  flipping_point_size = 1.3,
+  plot_height = 12,
+  plot_width = 18,
+  verbose = TRUE
 )
 ```
 
@@ -211,3 +248,4 @@ MIT © Westlake University
 If you use PhyloSOLID in your research, please cite:
 
 1. Yang, Q. et al. PhyloSOLID: Robust phylogeny reconstruction from single-cell data despite inherent error and sparsity. (2026) doi:10.64898/2026.02.04.703905.
+

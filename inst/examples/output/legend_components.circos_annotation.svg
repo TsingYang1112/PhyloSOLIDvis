@@ -29,19 +29,19 @@
 <rect x='407.95' y='236.09' width='480.10' height='102.44' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
 <text x='413.43' y='258.11' style='font-size: 20.00px;fill: #3C3C3C; font-family: "Arial";' textLength='83.00px' lengthAdjust='spacingAndGlyphs'>Cell Type</text>
 <rect x='413.43' y='265.81' width='17.28' height='18.76' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='413.71' y='266.09' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #FFFF00;' />
+<rect x='413.71' y='266.09' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E425AB;' />
 <rect x='413.43' y='290.05' width='17.28' height='18.76' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='413.71' y='290.33' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #FF7F00;' />
+<rect x='413.71' y='290.33' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #CFED16;' />
 <rect x='413.43' y='314.29' width='17.28' height='18.76' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='413.71' y='314.57' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #FF0000;' />
+<rect x='413.71' y='314.57' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #DDEFF6;' />
 <rect x='573.93' y='265.81' width='17.28' height='18.76' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='574.21' y='266.09' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #FFE474;' />
+<rect x='574.21' y='266.09' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #AE74CF;' />
 <rect x='573.93' y='290.05' width='17.28' height='18.76' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='574.21' y='290.33' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0000FF;' />
+<rect x='574.21' y='290.33' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E1D651;' />
 <rect x='573.93' y='314.29' width='17.28' height='18.76' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='574.21' y='314.57' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #6E8E84;' />
+<rect x='574.21' y='314.57' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #8F569E;' />
 <rect x='796.47' y='265.81' width='17.28' height='18.76' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='796.75' y='266.09' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #A0522D;' />
+<rect x='796.75' y='266.09' width='16.71' height='18.19' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #83A2E0;' />
 <text x='436.19' y='282.35' style='font-size: 20.00px; font-family: "Arial";' textLength='54.47px' lengthAdjust='spacingAndGlyphs'>B_cell</text>
 <text x='436.19' y='306.59' style='font-size: 20.00px; font-family: "Arial";' textLength='132.28px' lengthAdjust='spacingAndGlyphs'>Epithelial_cells</text>
 <text x='436.19' y='330.83' style='font-size: 20.00px; font-family: "Arial";' textLength='97.81px' lengthAdjust='spacingAndGlyphs'>Fibroblasts</text>
