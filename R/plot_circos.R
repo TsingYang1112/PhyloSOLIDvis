@@ -6,12 +6,12 @@
 #' @param target_mut Target mutation to highlight (default: "no")
 #' @param selected_mutlist Selected mutations (default: "all")
 #' @param manual_fp_file Manual false positive file (default: "no")
-#' @param tip_label_offset Offset for tip labels (default: 6)
+#' @param tip_label_offset Offset for tip labels (default: 10)
 #' @param tip_label_size Size of tip labels (default: 2.5)
 #' @param tip_point_size Size of tip points (default: 0.5)
 #' @param heatmap_width Width of heatmap (default: 0.3)
-#' @param heatmap_circos_offset Offset for heatmap (default: 0.05)
-#' @param flipping_point_size Size of flipping points (default: 1.3)
+#' @param heatmap_circos_offset Offset for heatmap (default: 0.04)
+#' @param flipping_point_size Size of flipping points (default: 0.2)
 #' @param plot_height Plot height (default: 12)
 #' @param plot_width Plot width (default: 18)
 #' @param verbose Print progress (default: TRUE)
@@ -25,12 +25,12 @@ plot_circos <- function(
     target_mut = "no",
     selected_mutlist = "all",
     manual_fp_file = "no",
-    tip_label_offset = 6,
+    tip_label_offset = 10,
     tip_label_size = 2.5,
     tip_point_size = 0.5,
     heatmap_width = 0.3,
-    heatmap_circos_offset = 0.05,
-    flipping_point_size = 1.3,
+    heatmap_circos_offset = 0.04,
+    flipping_point_size = 0.2,
     plot_height = 12,
     plot_width = 18,
     verbose = TRUE

@@ -28,17 +28,36 @@ devtools::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
 
 ## Quick Start
 
+**Note:** `ggplot2` must be loaded before `PhyloSOLIDvis` to avoid namespace conflicts.
+
 ```r
 library(ggplot2)
 library(PhyloSOLIDvis)
 
 result <- plot_circos(
-  inputpath = "path/to/PhyloSOLID/output/",
-  outputpath = "path/to/figures/",
-  annotation_file = "path/to/annotations.txt",
-  target_mut = "chr11_65426524_T_C"
+  inputpath = "path/to/workdir/sampleid/03_tree_building/mutation_integrator/phylo/",
+  outputpath = "path/to/circos_plot/",
+  annotation_file = "path/to/annotations.txt"
 )
 ```
+
+### Locating the correct input directory
+
+After running PhyloSOLID with `--workdir ./results` and `--sample SAMPLE_ID`, the required files are located in:
+
+```
+workdir/
+└── SAMPLE_ID/
+    └── 03_tree_building/
+        └── mutation_integrator/
+            └── phylo/
+                ├── final_cleaned_I_full_withNA3_for_circosPlot.txt
+                ├── final_cleaned_M_full_basedPivots.filtered_sites_inferred.CFMatrix
+                ├── df_flipping_count_for_each_mut.txt
+                └── df_total_flipping_count.txt
+```
+
+**Set `inputpath` to this `phylo/` directory.**
 
 ### Using built-in demo data
 
@@ -59,23 +78,25 @@ result <- plot_circos(
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `inputpath` | (required) | Path to directory containing PhyloSOLID output files |
+| `inputpath` | (required) | Path to `phylo/` directory containing PhyloSOLID output files |
 | `outputpath` | (required) | Path to output directory for saving plots |
 | `annotation_file` | (required) | Path to cell annotation file (TSV format) |
 | `target_mut` | "no" | Target mutation ID to highlight |
 | `selected_mutlist` | "all" | Comma-separated list of mutations to include |
 | `manual_fp_file` | "no" | Path to manual false positive annotation file |
-| `tip_label_offset` | 6 | Offset distance for tip labels |
+| `tip_label_offset` | 10 | Offset distance for tip labels |
 | `tip_label_size` | 2.5 | Font size for tip labels |
 | `tip_point_size` | 0.5 | Size of tip points |
 | `heatmap_width` | 0.3 | Width of heatmap track |
-| `heatmap_circos_offset` | 0.05 | Offset for heatmap from tree |
-| `flipping_point_size` | 1.3 | Size of flipping marker points |
+| `heatmap_circos_offset` | 0.04 | Offset for heatmap from tree |
+| `flipping_point_size` | 0.2 | Size of flipping marker points |
 | `plot_height` | 12 | Output plot height (inches) |
 | `plot_width` | 18 | Output plot width (inches) |
 | `verbose` | TRUE | Print progress messages |
 
 ## Required Input Files
+
+All required files are located in the `phylo/` directory after running PhyloSOLID:
 
 | File | Description |
 |------|-------------|
@@ -111,11 +132,12 @@ The annotation file (TSV format) should contain a `barcode` column and can inclu
 ## Example
 
 ```r
+library(ggplot2)
 library(PhyloSOLIDvis)
 
-# Basic usage
+# Basic usage with PhyloSOLID output
 result <- plot_circos(
-  inputpath = "results/phylosolid/",
+  inputpath = "results/Org4S15D63/03_tree_building/mutation_integrator/phylo/",
   outputpath = "figures/circos/",
   annotation_file = "data/annotations.txt",
   verbose = TRUE
@@ -123,7 +145,7 @@ result <- plot_circos(
 
 # With target mutation highlighting
 result <- plot_circos(
-  inputpath = "results/phylosolid/",
+  inputpath = "results/Org4S15D63/03_tree_building/mutation_integrator/phylo/",
   outputpath = "figures/circos/",
   annotation_file = "data/annotations.txt",
   target_mut = "chr11_65426524_T_C",
@@ -133,6 +155,15 @@ result <- plot_circos(
 ```
 
 ## Troubleshooting
+
+### ggplot2 must be loaded first
+
+Always load `ggplot2` before `PhyloSOLIDvis`:
+
+```r
+library(ggplot2)
+library(PhyloSOLIDvis)
+```
 
 ### Network issues during installation
 
@@ -180,4 +211,3 @@ MIT © Westlake University
 If you use PhyloSOLID in your research, please cite:
 
 1. Yang, Q. et al. PhyloSOLID: Robust phylogeny reconstruction from single-cell data despite inherent error and sparsity. (2026) doi:10.64898/2026.02.04.703905.
-
