@@ -102,12 +102,12 @@ result <- plot_circos(
 | `target_mut` | "no" | "no" | Target mutation ID to highlight |
 | `selected_mutlist` | "all" | "all" | Comma-separated list of mutations to include |
 | `manual_fp_file` | "no" | "no" | Path to manual false positive annotation file |
-| `tip_label_offset` | 10 | 6 | Offset distance for tip labels |
+| `tip_label_offset` | 10 | 6 | **Offset distance for tip labels** |
 | `tip_label_size` | 2.5 | 2.5 | Font size for tip labels |
 | `tip_point_size` | 0.5 | 0.5 | Size of tip points |
 | `heatmap_width` | 0.3 | 0.3 | Width of heatmap track |
 | `heatmap_circos_offset` | 0.04 | 0.05 | Offset for heatmap from tree |
-| `flipping_point_size` | 0.2 | 1.3 | Size of flipping marker points |
+| `flipping_point_size` | 0.2 | 1.3 | **Size of flipping marker points** |
 | `plot_height` | 12 | 12 | Output plot height (inches) |
 | `plot_width` | 18 | 18 | Output plot width (inches) |
 | `verbose` | TRUE | TRUE | Print progress messages |
