@@ -7,7 +7,7 @@
 plot_circos(
   inputpath,
   outputpath,
-  annotation_file,
+  annotation_file = NULL,
   target_mut = "no",
   selected_mutlist = "all",
   manual_fp_file = "no",
@@ -27,7 +27,7 @@ plot_circos(
 
 \item{outputpath}{Path to output directory}
 
-\item{annotation_file}{Path to annotation file}
+\item{annotation_file}{Path to annotation file (optional)}
 
 \item{target_mut}{Target mutation to highlight (default: "no")}
 

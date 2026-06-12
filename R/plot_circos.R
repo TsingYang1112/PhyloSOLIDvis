@@ -2,7 +2,7 @@
 #'
 #' @param inputpath Path to input data directory
 #' @param outputpath Path to output directory
-#' @param annotation_file Path to annotation file
+#' @param annotation_file Path to annotation file (optional)
 #' @param target_mut Target mutation to highlight (default: "no")
 #' @param selected_mutlist Selected mutations (default: "all")
 #' @param manual_fp_file Manual false positive file (default: "no")
@@ -21,7 +21,7 @@
 plot_circos <- function(
     inputpath,
     outputpath,
-    annotation_file,
+    annotation_file = NULL,
     target_mut = "no",
     selected_mutlist = "all",
     manual_fp_file = "no",
@@ -58,11 +58,17 @@ plot_circos <- function(
   features_file <- file.path(inputpath, "df_flipping_count_for_each_mut.txt")
   total_flipping_file <- file.path(inputpath, "df_total_flipping_count.txt")
   
-  # Validate input files
-  required_files <- c(inputfile, cffile, features_file, total_flipping_file, annotation_file)
+  # Validate input files (annotation_file is optional)
+  required_files <- c(inputfile, cffile, features_file, total_flipping_file)
   missing_files <- required_files[!file.exists(required_files)]
   if (length(missing_files) > 0) {
     stop("Required files not found:\n", paste("  -", missing_files, collapse = "\n"))
+  }
+  
+  # Check annotation file if provided
+  if (!is.null(annotation_file) && !file.exists(annotation_file)) {
+    warning("Annotation file not found: ", annotation_file, ". Proceeding without annotations.")
+    annotation_file <- NULL
   }
   
   # Read data
@@ -95,83 +101,135 @@ plot_circos <- function(
   tree <- dat2tree(tree_dat)
   if (verbose) message("  - Tree: ", ape::Ntip(tree), " tips, ", ape::Nnode(tree), " nodes")
   
-  # Process annotations
+  # Process annotations (optional)
   if (verbose) message("\n[4/6] Processing annotations...")
-  df_all_info <- read.table(annotation_file, header = TRUE, sep = "\t")
   
-  # Process annotation data
+  # Initialize empty annotation data structures
   anno_color <- c()
-  
-  # Cell cluster
-  if ("cluster_info" %in% colnames(df_all_info)) {
-    df_cluster <- df_all_info[, c("barcode", "cluster_info")]
-    df_cluster$cluster_info <- trimws(as.character(df_cluster$cluster_info))
-    df_cluster <- df_cluster[!df_cluster$barcode %in% outputree_dat_zero_barcode, ]
-    colnames(df_cluster) <- c("label", "cluster")
-    cluster_levels <- sort(unique(df_cluster$cluster))
-    df_cluster$cluster <- factor(df_cluster$cluster, levels = cluster_levels)
-    set.seed(42)
-    df_cluster_color <- grDevices::rgb(runif(length(cluster_levels)), 
-                                       runif(length(cluster_levels)), 
-                                       runif(length(cluster_levels)))
-    names(df_cluster_color) <- cluster_levels
-    anno_color <- c(anno_color, df_cluster_color)
-  }
-  
-  # Cell type
-  if ("cell_type" %in% colnames(df_all_info)) {
-    df_celltype <- df_all_info[, c("barcode", "cell_type")]
-    df_celltype$cell_type <- trimws(as.character(df_celltype$cell_type))
-    df_celltype <- df_celltype[!df_celltype$barcode %in% outputree_dat_zero_barcode, ]
-    colnames(df_celltype) <- c("label", "celltype")
-    celltype_levels <- sort(unique(df_celltype$celltype))
-    df_celltype$celltype <- factor(df_celltype$celltype, levels = celltype_levels)
-    set.seed(142)
-    df_celltype_color <- grDevices::rgb(runif(length(celltype_levels)), 
-                                        runif(length(celltype_levels)), 
-                                        runif(length(celltype_levels)))
-    names(df_celltype_color) <- celltype_levels
-    anno_color <- c(anno_color, df_celltype_color)
-  }
-  
-  # Sample
-  if ("sample" %in% colnames(df_all_info)) {
-    df_sample <- df_all_info[, c("barcode", "sample")]
-    df_sample$sample <- trimws(as.character(df_sample$sample))
-    df_sample <- df_sample[!df_sample$barcode %in% outputree_dat_zero_barcode, ]
-    colnames(df_sample) <- c("label", "sample")
-    df_sample_color <- c("#ebb16e", "#b2aad3")
-    names(df_sample_color) <- c('P6_ST_vis_rep2', 'P6_ST_vis_rep1')
-    anno_color <- c(anno_color, df_sample_color)
-  }
-  
-  # Tumor score
+  df_cluster <- NULL
+  df_celltype <- NULL
+  df_sample <- NULL
+  df_tumor <- NULL
+  df_Bcell <- NULL
+  df_cluster_color <- NULL
+  df_celltype_color <- NULL
+  df_sample_color <- NULL
+  df_tumor_color <- NULL
+  df_Bcell_color <- NULL
   tumor_breaks <- NULL
-  if ("tumor_score" %in% colnames(df_all_info)) {
-    df_tumor <- df_all_info[, c("barcode", "tumor_score")]
-    df_tumor$tumor_score <- as.numeric(as.character(df_tumor$tumor_score))
-    df_tumor <- df_tumor[!df_tumor$barcode %in% outputree_dat_zero_barcode, ]
-    min_value <- min(df_tumor$tumor_score[df_tumor$tumor_score != 0])
-    max_value <- max(df_tumor$tumor_score)
-    colnames(df_tumor) <- c("label", "tumor_score")
-    df_tumor_color <- c("#00a3c4", "#ffebf6", "#ff64be")
-    tumor_breaks <- c(0, min_value, max_value)
-    anno_color <- c(anno_color, df_tumor_color)
-  }
-  
-  # B cell proportion
   bcell_breaks <- NULL
-  if ("B_cell_prop" %in% colnames(df_all_info)) {
-    df_Bcell <- df_all_info[, c("barcode", "B_cell_prop")]
-    df_Bcell$B_cell_prop <- as.numeric(as.character(df_Bcell$B_cell_prop))
-    df_Bcell <- df_Bcell[!df_Bcell$barcode %in% outputree_dat_zero_barcode, ]
-    min_value <- min(df_Bcell$B_cell_prop[df_Bcell$B_cell_prop != 0])
-    max_value <- max(df_Bcell$B_cell_prop)
-    median_value <- median(df_Bcell$B_cell_prop)
-    colnames(df_Bcell) <- c("label", "B_cell_prop")
-    df_Bcell_color <- c("#F4D166", "#DBE8B4", "#24693D")
-    bcell_breaks <- c(min_value, median_value, max_value)
-    anno_color <- c(anno_color, df_Bcell_color)
+  
+  if (!is.null(annotation_file) && file.exists(annotation_file)) {
+    df_all_info <- read.table(annotation_file, header = TRUE, sep = "\t")
+    if (verbose) message("  - Loaded annotation file with ", nrow(df_all_info), " entries")
+    
+    # Cell cluster
+    if ("cluster_info" %in% colnames(df_all_info)) {
+      temp_cluster <- df_all_info[, c("barcode", "cluster_info")]
+      temp_cluster$cluster_info <- trimws(as.character(temp_cluster$cluster_info))
+      temp_cluster <- temp_cluster[!temp_cluster$barcode %in% outputree_dat_zero_barcode, ]
+      temp_cluster <- temp_cluster[!is.na(temp_cluster$cluster_info) & temp_cluster$cluster_info != "", ]
+      
+      if (nrow(temp_cluster) > 0) {
+        df_cluster <- data.frame(label = temp_cluster$barcode, cluster = temp_cluster$cluster_info, stringsAsFactors = FALSE)
+        cluster_levels <- sort(unique(df_cluster$cluster))
+        df_cluster$cluster <- factor(df_cluster$cluster, levels = cluster_levels)
+        set.seed(42)
+        df_cluster_color <- grDevices::rgb(runif(length(cluster_levels)), 
+                                           runif(length(cluster_levels)), 
+                                           runif(length(cluster_levels)))
+        names(df_cluster_color) <- cluster_levels
+        anno_color <- c(anno_color, df_cluster_color)
+        if (verbose) message("  - Added cluster annotations (", length(cluster_levels), " clusters)")
+      } else {
+        if (verbose) message("  - No valid cluster data found, skipping")
+      }
+    }
+    
+    # Cell type
+    if ("cell_type" %in% colnames(df_all_info)) {
+      temp_celltype <- df_all_info[, c("barcode", "cell_type")]
+      temp_celltype$cell_type <- trimws(as.character(temp_celltype$cell_type))
+      temp_celltype <- temp_celltype[!temp_celltype$barcode %in% outputree_dat_zero_barcode, ]
+      temp_celltype <- temp_celltype[!is.na(temp_celltype$cell_type) & temp_celltype$cell_type != "", ]
+      
+      if (nrow(temp_celltype) > 0) {
+        df_celltype <- data.frame(label = temp_celltype$barcode, celltype = temp_celltype$cell_type, stringsAsFactors = FALSE)
+        celltype_levels <- sort(unique(df_celltype$celltype))
+        df_celltype$celltype <- factor(df_celltype$celltype, levels = celltype_levels)
+        set.seed(142)
+        df_celltype_color <- grDevices::rgb(runif(length(celltype_levels)), 
+                                            runif(length(celltype_levels)), 
+                                            runif(length(celltype_levels)))
+        names(df_celltype_color) <- celltype_levels
+        anno_color <- c(anno_color, df_celltype_color)
+        if (verbose) message("  - Added cell type annotations (", length(celltype_levels), " types)")
+      } else {
+        if (verbose) message("  - No valid cell type data found, skipping")
+      }
+    }
+    
+    # Sample
+    if ("sample" %in% colnames(df_all_info)) {
+      temp_sample <- df_all_info[, c("barcode", "sample")]
+      temp_sample$sample <- trimws(as.character(temp_sample$sample))
+      temp_sample <- temp_sample[!temp_sample$barcode %in% outputree_dat_zero_barcode, ]
+      temp_sample <- temp_sample[!is.na(temp_sample$sample) & temp_sample$sample != "", ]
+      
+      if (nrow(temp_sample) > 0) {
+        df_sample <- data.frame(label = temp_sample$barcode, sample = temp_sample$sample, stringsAsFactors = FALSE)
+        sample_levels <- unique(df_sample$sample)
+        df_sample_color <- c("#ebb16e", "#b2aad3")[seq_along(sample_levels)]
+        names(df_sample_color) <- sample_levels
+        anno_color <- c(anno_color, df_sample_color)
+        if (verbose) message("  - Added sample annotations (", length(sample_levels), " samples)")
+      } else {
+        if (verbose) message("  - No valid sample data found, skipping")
+      }
+    }
+    
+    # Tumor score
+    if ("tumor_score" %in% colnames(df_all_info)) {
+      temp_tumor <- df_all_info[, c("barcode", "tumor_score")]
+      temp_tumor$tumor_score <- as.numeric(as.character(temp_tumor$tumor_score))
+      temp_tumor <- temp_tumor[!temp_tumor$barcode %in% outputree_dat_zero_barcode, ]
+      temp_tumor <- temp_tumor[!is.na(temp_tumor$tumor_score), ]
+      
+      if (nrow(temp_tumor) > 0) {
+        df_tumor <- data.frame(label = temp_tumor$barcode, tumor_score = temp_tumor$tumor_score, stringsAsFactors = FALSE)
+        min_value <- min(df_tumor$tumor_score[df_tumor$tumor_score != 0], na.rm = TRUE)
+        max_value <- max(df_tumor$tumor_score, na.rm = TRUE)
+        df_tumor_color <- c("#00a3c4", "#ffebf6", "#ff64be")
+        tumor_breaks <- c(0, min_value, max_value)
+        anno_color <- c(anno_color, df_tumor_color)
+        if (verbose) message("  - Added tumor score annotations")
+      } else {
+        if (verbose) message("  - No valid tumor score data found, skipping")
+      }
+    }
+    
+    # B cell proportion
+    if ("B_cell_prop" %in% colnames(df_all_info)) {
+      temp_bcell <- df_all_info[, c("barcode", "B_cell_prop")]
+      temp_bcell$B_cell_prop <- as.numeric(as.character(temp_bcell$B_cell_prop))
+      temp_bcell <- temp_bcell[!temp_bcell$barcode %in% outputree_dat_zero_barcode, ]
+      temp_bcell <- temp_bcell[!is.na(temp_bcell$B_cell_prop), ]
+      
+      if (nrow(temp_bcell) > 0) {
+        df_Bcell <- data.frame(label = temp_bcell$barcode, B_cell_prop = temp_bcell$B_cell_prop, stringsAsFactors = FALSE)
+        min_value <- min(df_Bcell$B_cell_prop[df_Bcell$B_cell_prop != 0], na.rm = TRUE)
+        max_value <- max(df_Bcell$B_cell_prop, na.rm = TRUE)
+        median_value <- median(df_Bcell$B_cell_prop, na.rm = TRUE)
+        df_Bcell_color <- c("#F4D166", "#DBE8B4", "#24693D")
+        bcell_breaks <- c(min_value, median_value, max_value)
+        anno_color <- c(anno_color, df_Bcell_color)
+        if (verbose) message("  - Added B cell proportion annotations")
+      } else {
+        if (verbose) message("  - No valid B cell proportion data found, skipping")
+      }
+    }
+  } else {
+    if (verbose) message("  - No annotation file provided. Skipping annotation layers.")
   }
   
   # Sort cells and identify subclones
@@ -198,10 +256,10 @@ plot_circos <- function(
   # Prepare subclone info
   subclones_transformed <- tidyr::separate_rows(subclones, cells, sep = ",")
   
-  if (exists("df_cluster")) {
+  if (!is.null(df_cluster)) {
     subclones_transformed <- subclones_transformed %>%
       left_join(df_cluster, by = c("cells" = "label"))
-  } else if (exists("df_celltype")) {
+  } else if (!is.null(df_celltype)) {
     subclones_transformed <- subclones_transformed %>%
       left_join(df_celltype, by = c("cells" = "label"))
   }
@@ -448,10 +506,10 @@ plot_circos <- function(
     }
   }
   
-  # Add cell annotation layers
+  # Add cell annotation layers (only if annotation data exists)
   p2_anno <- p1_tree
   
-  if (exists("df_celltype")) {
+  if (!is.null(df_celltype) && nrow(df_celltype) > 0) {
     p2_anno <- p2_anno + new_scale_fill() +
       geom_fruit(data = df_celltype, geom = geom_tile, pwidth = 0.2, width = 0.2,
                  mapping = aes(y = label, x = "celltype", fill = celltype),
@@ -464,7 +522,7 @@ plot_circos <- function(
             legend.title = element_text(size = 16), legend.text = element_text(size = 14))
   }
   
-  if (exists("df_cluster")) {
+  if (!is.null(df_cluster) && nrow(df_cluster) > 0) {
     p2_anno <- p2_anno + new_scale_fill() +
       geom_fruit(data = df_cluster, geom = geom_tile, pwidth = 0.2, width = 0.2,
                  mapping = aes(y = label, x = "cluster", fill = cluster),
@@ -477,7 +535,7 @@ plot_circos <- function(
             legend.title = element_text(size = 16), legend.text = element_text(size = 14))
   }
   
-  if (exists("df_sample")) {
+  if (!is.null(df_sample) && nrow(df_sample) > 0) {
     p2_anno <- p2_anno + new_scale_fill() +
       geom_fruit(data = df_sample, geom = geom_tile, pwidth = 0.2, width = 0.2,
                  mapping = aes(y = label, x = "sample", fill = sample),
@@ -490,7 +548,7 @@ plot_circos <- function(
             legend.title = element_text(size = 16), legend.text = element_text(size = 14))
   }
   
-  if (exists("df_tumor")) {
+  if (!is.null(df_tumor) && nrow(df_tumor) > 0) {
     p2_anno <- p2_anno + new_scale_fill() +
       geom_fruit(data = df_tumor, geom = geom_tile, pwidth = 0.2, width = 0.2,
                  mapping = aes(y = label, x = "tumor_score", fill = tumor_score),
@@ -502,7 +560,7 @@ plot_circos <- function(
             legend.title = element_text(size = 16), legend.text = element_text(size = 14))
   }
   
-  if (exists("df_Bcell")) {
+  if (!is.null(df_Bcell) && nrow(df_Bcell) > 0) {
     p2_anno <- p2_anno + new_scale_fill() +
       geom_fruit(data = df_Bcell, geom = geom_tile, pwidth = 0.2, width = 0.2,
                  mapping = aes(y = label, x = "B_cell_prop", fill = B_cell_prop),

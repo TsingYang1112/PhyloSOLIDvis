@@ -102,16 +102,16 @@
 <rect x='407.95' y='462.88' width='253.02' height='165.02' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
 <text x='413.43' y='484.90' style='font-size: 20.00px;fill: #3C3C3C; font-family: "Arial";' textLength='235.12px' lengthAdjust='spacingAndGlyphs'>Genotyper (raw &gt; inferred)</text>
 <rect x='413.43' y='492.60' width='28.35' height='28.35' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='413.71' y='492.89' width='27.78' height='27.78' style='stroke-width: 0.43; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #D9D9D9;' />
+<rect x='413.71' y='492.89' width='27.78' height='27.78' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #D9D9D9;' />
 <circle cx='427.60' cy='506.78' r='11.02' style='stroke-width: 0.71; stroke: none; fill: #2C81BE;' />
 <rect x='413.43' y='526.43' width='28.35' height='28.35' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='413.71' y='526.71' width='27.78' height='27.78' style='stroke-width: 0.43; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #2C81BE;' />
+<rect x='413.71' y='526.71' width='27.78' height='27.78' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #2C81BE;' />
 <circle cx='427.60' cy='540.60' r='11.02' style='stroke-width: 0.71; stroke: none; fill: #E17259;' />
 <rect x='413.43' y='560.26' width='28.35' height='28.35' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='413.71' y='560.54' width='27.78' height='27.78' style='stroke-width: 0.43; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #D9D9D9;' />
+<rect x='413.71' y='560.54' width='27.78' height='27.78' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #D9D9D9;' />
 <circle cx='427.60' cy='574.43' r='11.02' style='stroke-width: 0.71; stroke: none; fill: #E17259;' />
 <rect x='413.43' y='594.08' width='28.35' height='28.35' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
-<rect x='413.71' y='594.36' width='27.78' height='27.78' style='stroke-width: 0.43; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E17259;' />
+<rect x='413.71' y='594.36' width='27.78' height='27.78' style='stroke-width: 0.43; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E17259;' />
 <circle cx='427.60' cy='608.25' r='11.02' style='stroke-width: 0.71; stroke: none; fill: #2C81BE;' />
 <text x='447.26' y='513.94' style='font-size: 20.00px; font-family: "Arial";' textLength='198.44px' lengthAdjust='spacingAndGlyphs'>missing -&gt; non-mutant</text>
 <text x='447.26' y='547.76' style='font-size: 20.00px; font-family: "Arial";' textLength='191.81px' lengthAdjust='spacingAndGlyphs'>non-mutant -&gt; mutant</text>
