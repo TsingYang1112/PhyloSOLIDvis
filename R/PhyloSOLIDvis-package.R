@@ -27,6 +27,11 @@
 #' @importFrom tibble column_to_rownames as_tibble
 #' @importFrom utils packageVersion read.table write.table
 #' @importFrom stats na.omit
+#' @importFrom pheatmap pheatmap
+#' @importFrom ggtree ggtree geom_tree theme_tree2 get_taxa_name
+#' @importFrom ggplot2 theme element_blank margin coord_cartesian
+#' @export run_all
+
 ## usethis namespace: end
 NULL
 

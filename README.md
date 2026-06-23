@@ -10,7 +10,8 @@ PhyloSOLIDvis generates publication-ready circular (circos-style) phylogenetic t
 - 🔬 **Cell annotation layers** (types, clusters, samples, tumor scores, B cell proportions)
 - 🧬 **Genotype flipping visualization** (input vs inferred states)
 - 🎯 **Target mutation highlighting**
-- 📊 **Adaptive parameter estimation**
+- 📊 **Heatmap visualization** for mutation profiles
+- 🔄 **Flexible workflow** with independent functions for each step
 
 ## Example Output
 
@@ -40,10 +41,31 @@ devtools::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
 library(ggplot2)
 library(PhyloSOLIDvis)
 
-result <- plot_circos(
+# Run the complete pipeline (matrix ordering + circos plot + heatmap)
+results <- run_all(
   inputpath = "path/to/workdir/sampleid/03_tree_building/mutation_integrator/phylo/",
-  outputpath = "path/to/circos_plot/",
+  outputpath = "path/to/output/",
   annotation_file = "path/to/annotations.txt"
+)
+
+# Or run individual steps:
+# Step 1: Order matrix
+order_result <- order_matrix(
+  inputpath = "path/to/phylo/",
+  outputpath = "path/to/output/"
+)
+
+# Step 2: Generate circos plot
+result_circos <- plot_circos(
+  inputpath = "path/to/phylo/",
+  outputpath = "path/to/output/",
+  annotation_file = "path/to/annotations.txt"
+)
+
+# Step 3: Generate heatmap
+result_heatmap <- plot_heatmap(
+  inputpath = "path/to/phylo/",
+  outputpath = "path/to/output/"
 )
 ```
 
@@ -60,27 +82,24 @@ workdir/
                 ├── final_cleaned_I_full_withNA3_for_circosPlot.txt
                 ├── final_cleaned_M_full_basedPivots.filtered_sites_inferred.CFMatrix
                 ├── df_flipping_count_for_each_mut.txt
-                └── df_total_flipping_count.txt
+                ├── df_total_flipping_count.txt
+                └── df_barcode_clones_from_phylo_tree.csv
 ```
 
 **Set `inputpath` to this `phylo/` directory.**
 
-### Using built-in demo data
+## Functions
 
-```r
-# Locate demo data
-demo_path <- system.file("examples/input", package = "PhyloSOLIDvis")
-list.files(demo_path)
-
-# Run with demo data
-result <- plot_circos(
-  inputpath = demo_path,
-  outputpath = "output/",
-  annotation_file = "path/to/annotation.txt"
-)
-```
+| Function | Description |
+|----------|-------------|
+| `run_all()` | Run complete pipeline (matrix ordering + circos plot + heatmap) |
+| `order_matrix()` | Sort the mutation matrix and generate ordered metadata |
+| `plot_circos()` | Generate circular phylogenetic tree plot |
+| `plot_heatmap()` | Generate heatmap visualization |
 
 ## Parameters
+
+### plot_circos Parameters
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -100,20 +119,31 @@ result <- plot_circos(
 | `plot_width` | 18 | Output plot width (inches) |
 | `verbose` | TRUE | Print progress messages |
 
-### Recommended parameters for demo
+### plot_heatmap Parameters
 
-When using the built-in demo data, the following parameters are recommended:
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `inputpath` | (required) | Path to `phylo/` directory |
+| `outputpath` | (required) | Path to output directory |
+| `ordered_metadata_file` | NULL | Path to ordered_metadata_for_heatmap.txt |
+| `colors` | c("#D4E8F0", "#7D2224") | Colors for 0 and 1 values |
+| `na_color` | "white" | Color for NA/missing values |
+| `show_colnames` | TRUE | Show column names (mutation IDs) |
+| `show_rownames` | FALSE | Show row names (cell IDs) |
+| `cluster_cols` | FALSE | Cluster columns (mutations) |
+| `border_color` | NA | Border color for heatmap cells |
 
-```r
-result <- plot_circos(
-  inputpath = demo_path,
-  outputpath = "demo_output/",
-  annotation_file = "path/to/annotation.txt",
-  tip_label_offset = 6,
-  heatmap_circos_offset = 0.05,
-  flipping_point_size = 1.3
-)
-```
+### run_all Parameters
+
+`run_all()` accepts all parameters from `plot_circos()` and `plot_heatmap()` plus:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `run_adjusted` | FALSE | Run adjusted plot with different parameters |
+| `adjusted_tip_label_offset` | 6 | Tip label offset for adjusted plot |
+| `adjusted_flipping_point_size` | 1.3 | Flipping point size for adjusted plot |
+| `heatmap_colors` | c("#D4E8F0", "#7D2224") | Colors for heatmap |
+| `heatmap_na_color` | "white" | Color for NA values in heatmap |
 
 ## Required Input Files
 
@@ -125,6 +155,7 @@ All required files are located in the `phylo/` directory after running PhyloSOLI
 | `final_cleaned_M_full_basedPivots.filtered_sites_inferred.CFMatrix` | Conflict-free matrix |
 | `df_flipping_count_for_each_mut.txt` | Per-mutation flipping statistics |
 | `df_total_flipping_count.txt` | Total flipping statistics |
+| `df_barcode_clones_from_phylo_tree.csv` | Clone assignment and color information for each cell |
 
 ### Annotation File Format (Optional)
 
@@ -151,70 +182,56 @@ The annotation file (TSV format) should contain a `barcode` column and can inclu
 | `ordered_metadata_for_heatmap.txt` | Heatmap ordering data |
 | `CNVtree_data_clone_order_tree.rds` | Tree structure data |
 | `df_muts_corresponding_to_ordered_tiplabels_by_anticlockwise.txt` | Mutation-cell mapping |
+| `heatmap_and_histograms_for_our_tree.pdf` | Heatmap plot |
+| `heatmap_preview.png` | Heatmap preview |
+| `phylo_tree.rds` | Phylogenetic tree object |
 
-## Examples
+## Run Demo
 
-### Basic usage with PhyloSOLID output
+After installation, you can test the package with the built-in demo data.
 
-```r
-library(ggplot2)
-library(PhyloSOLIDvis)
+### Using the demo script
 
-result <- plot_circos(
-  inputpath = "results/Org4S15D63/03_tree_building/mutation_integrator/phylo/",
-  outputpath = "figures/circos/",
-  annotation_file = "data/annotations.txt",
-  verbose = TRUE
-)
+```bash
+# Download and run the demo script
+wget https://raw.githubusercontent.com/TsingYang1112/PhyloSOLIDvis/main/run_demo.R
+Rscript run_demo.R
 ```
 
-### With target mutation highlighting
+Or in R:
 
 ```r
-result <- plot_circos(
-  inputpath = "results/Org4S15D63/03_tree_building/mutation_integrator/phylo/",
-  outputpath = "figures/circos/",
-  annotation_file = "data/annotations.txt",
-  target_mut = "chr11_65426524_T_C",
-  tip_label_offset = 8,
-  tip_label_size = 3
-)
+# Source the demo script
+demo_script <- system.file("examples/example_usage.R", package = "PhyloSOLIDvis")
+source(demo_script)
 ```
 
-### Without annotation file (tree + heatmap only)
-
-```r
-result <- plot_circos(
-  inputpath = "results/Org4S15D63/03_tree_building/mutation_integrator/phylo/",
-  outputpath = "figures/circos/"
-)
-```
-
-### Using built-in demo data with full parameters
+### Manual demo run
 
 ```r
 library(ggplot2)
 library(PhyloSOLIDvis)
 
 demo_path <- system.file("examples/input", package = "PhyloSOLIDvis")
+output_path <- "demo_output/"
+annotation_file <- system.file("examples/annotation.txt", package = "PhyloSOLIDvis")
 
-result <- plot_circos(
+# Run complete pipeline with demo data
+results <- run_all(
   inputpath = demo_path,
-  outputpath = "demo_output/",
-  annotation_file = "path/to/annotation.txt",
-  target_mut = "no",
-  selected_mutlist = "all",
-  manual_fp_file = "no",
+  outputpath = output_path,
+  annotation_file = annotation_file,
   tip_label_offset = 6,
-  tip_label_size = 2.5,
-  tip_point_size = 0.5,
-  heatmap_width = 0.3,
   heatmap_circos_offset = 0.05,
   flipping_point_size = 1.3,
-  plot_height = 12,
-  plot_width = 18,
+  run_adjusted = TRUE,
+  adjusted_tip_label_offset = 6,
+  adjusted_flipping_point_size = 1.3,
   verbose = TRUE
 )
+
+# View generated files
+list.files(output_path)
 ```
 
 ## Troubleshooting
