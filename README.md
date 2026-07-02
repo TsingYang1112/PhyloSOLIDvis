@@ -186,6 +186,81 @@ The annotation file (TSV format) should contain a `barcode` column and can inclu
 | `heatmap_preview.png` | Heatmap preview |
 | `phylo_tree.rds` | Phylogenetic tree object |
 
+## Interactive Online Inspection Platform
+
+For interactive post-analysis and quality control, you can upload your PhyloSOLIDvis outputs to our dedicated web server:
+
+**Web Server**: [https://phylosolid.westlake.edu.cn](https://phylosolid.westlake.edu.cn)
+
+> **🔐 Access:** Please register with your **institutional email address** (e.g., `@*.edu`, `@*.ac.cn`, `@*.edu.cn`) to access the platform. Registration is free for academic users.
+
+**Features:**
+- Interactive Circos exploration with zoom and cell-level query
+- Tree topology evaluation and quality control
+- Genotype flip statistics for assessing tree reliability
+- Optional upload of IGV snapshots and ANNOVAR annotation results
+
+### Required Upload Files
+
+To initialize a project on the web platform, you'll need the following files from your PhyloSOLIDvis output:
+
+| Upload Field | Required File | Description |
+|:-------------|:--------------|:------------|
+| **Binary matrix for circos heatmap layer** | `ordered_metadata_for_heatmap.txt` | Ordered cell IDs with metadata for heatmap |
+| **Ordered cell IDs with top mutations** | `df_muts_corresponding_to_ordered_tiplabels_by_anticlockwise.txt` | Mutation order for circos plot |
+| **Circos plot (SVG format)** | `No_target.circle_tree_output_as_point.*.svg` | Main circular tree plot |
+| **Legend figure** | `legend_components.circos_annotation.svg` | Annotation legend for circos plot |
+| **Global flip statistics** | `df_total_flipping_count.txt` | Total genotype flipping statistics |
+| **Per-mutation flip statistics** | `df_flipping_count_for_each_mut.txt` | Per-mutation flipping statistics |
+
+### Where to Find These Files
+
+After running `plot_circos()` or `run_all()`:
+
+```
+your_output_directory/
+├── ordered_metadata_for_heatmap.txt
+├── df_muts_corresponding_to_ordered_tiplabels_by_anticlockwise.txt
+├── No_target.circle_tree_output_as_point.*.svg
+├── legend_components.circos_annotation.svg
+├── df_total_flipping_count.txt          (from PhyloSOLID phylo/ directory)
+└── df_flipping_count_for_each_mut.txt   (from PhyloSOLID phylo/ directory)
+```
+
+> **Note:** The flip statistics files (`df_total_flipping_count.txt` and `df_flipping_count_for_each_mut.txt`) are located in the `phylo/` directory from your PhyloSOLID run (`03_tree_building/mutation_integrator/phylo/`). You'll need to copy them to your visualization output directory or upload them separately.
+
+### After Submission
+
+1. Your task appears on the **Results page** with a unique Job ID
+2. Click **Open** to launch the interactive viewer
+3. The interface displays your circos tree with:
+   - **Interactive zoom and pan** for detailed inspection
+   - **Clickable cells** that reveal mutation profiles and barcodes
+   - **Annotation panel** showing genotype flip statistics
+4. Use the annotation panel to assess tree reliability:
+   - **Excessive false-positive signals** (1→0 transitions) indicate low reliability
+   - **High false-negative signals** (0→1 transitions) suggest missing data issues
+
+### Deep Inspection Features
+
+At the bottom of the webpage, you can upload supplementary files for deeper validation:
+
+- **ANNOVAR variant annotation results**: Examine gene context, genomic regions, and functional predictions for each mutation
+- **IGV snapshot figures** (PNG format): Visualize raw sequencing reads at each mutation site
+  - Each PNG must be named with the exact mutation ID (e.g., `chr1_39034563_T_A.png`)
+  - Must correspond with a single IGV genomic region
+
+### Example Use Case
+
+1. Run PhyloSOLIDvis to generate your circos plot and heatmap
+2. Upload the required files to the web platform
+3. Interactively explore the tree to verify mutation placements
+4. Check flip statistics to identify potentially unreliable mutations
+5. For suspicious mutations, upload IGV snapshots to validate raw read evidence
+6. Use ANNOVAR results to understand the functional context of each mutation
+
+This workflow enables rigorous quality control before finalizing your phylogenetic tree for publication.
+
 ## Run Demo
 
 After installation, you can test the package with the built-in demo data.
@@ -291,4 +366,3 @@ MIT © Westlake University
 If you use PhyloSOLID in your research, please cite:
 
 1. Yang, Q. et al. PhyloSOLID: Robust phylogeny reconstruction from single-cell data despite inherent error and sparsity. (2026) doi:10.64898/2026.02.04.703905.
-
