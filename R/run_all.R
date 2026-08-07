@@ -1,10 +1,7 @@
 #' Run complete PhyloSOLIDvis pipeline
 #'
-#' This function runs the complete visualization pipeline in one go:
-#' 1. Matrix ordering (order_matrix)
-#' 2. Circular tree plot (plot_circos)
-#' 3. Heatmap (plot_heatmap)
-#' 4. Optional: Adjusted circular tree plot with custom parameters
+#' This function runs the complete visualization pipeline in one go.
+#' It now uses a shared PhyloData object to avoid redundant I/O.
 #'
 #' @param inputpath Path to PhyloSOLID phylo directory
 #' @param outputpath Path to output directory
@@ -29,14 +26,6 @@
 #'
 #' @return Invisibly returns a list containing all results
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' results <- run_all(
-#'   inputpath = "path/to/phylo/",
-#'   outputpath = "path/to/output/"
-#' )
-#' }
 run_all <- function(
     inputpath,
     outputpath,
@@ -60,7 +49,6 @@ run_all <- function(
     verbose = TRUE
 ) {
   
-  # Start timing
   start_time <- Sys.time()
   
   if (verbose) {
@@ -76,35 +64,37 @@ run_all <- function(
     message(paste(rep("-", 70), collapse = ""))
   }
   
-  # Create output directory
   if (!dir.exists(outputpath)) {
     dir.create(outputpath, recursive = TRUE)
     if (verbose) message("Created output directory: ", outputpath)
   }
   
-  # Initialize results list
   results <- list()
   
-  # ============================================================
-  # Step 1: Matrix Ordering
-  # ============================================================
+  if (verbose) message("\n[Step 0/4] Preparing shared data...")
+  
+  phylo_data <- prepare_data(
+    inputpath = inputpath,
+    annotation_file = annotation_file,
+    verbose = verbose
+  )
+  
+  if (verbose) message("✓ Data preparation completed")
+  
   if (verbose) message("\n[Step 1/4] Matrix Ordering...")
   
   results$order <- order_matrix(
-    inputpath = inputpath,
+    data = phylo_data,
     outputpath = outputpath,
     verbose = verbose
   )
   
   if (verbose) message("✓ Matrix ordering completed")
   
-  # ============================================================
-  # Step 2: Circular Tree Plot
-  # ============================================================
   if (verbose) message("\n[Step 2/4] Circular Tree Plot...")
   
   results$circos <- plot_circos(
-    inputpath = inputpath,
+    data = phylo_data,
     outputpath = outputpath,
     annotation_file = annotation_file,
     target_mut = target_mut,
@@ -121,15 +111,15 @@ run_all <- function(
     verbose = verbose
   )
   
+  clone_order_tree <- results$circos$clone_order_tree
+  
   if (verbose) message("✓ Circular tree plot completed")
   
-  # ============================================================
-  # Step 3: Heatmap
-  # ============================================================
   if (verbose) message("\n[Step 3/4] Heatmap...")
   
   results$heatmap <- plot_heatmap(
-    inputpath = inputpath,
+    data = phylo_data,
+    tree = clone_order_tree,
     outputpath = outputpath,
     ordered_metadata_file = file.path(outputpath, "ordered_metadata_for_heatmap.txt"),
     colors = heatmap_colors,
@@ -139,14 +129,11 @@ run_all <- function(
   
   if (verbose) message("✓ Heatmap completed")
   
-  # ============================================================
-  # Step 4: Adjusted Circular Tree Plot (optional)
-  # ============================================================
   if (run_adjusted) {
     if (verbose) message("\n[Step 4/4] Adjusted Circular Tree Plot...")
     
     results$circos_adjusted <- plot_circos(
-      inputpath = inputpath,
+      data = phylo_data,
       outputpath = outputpath,
       annotation_file = annotation_file,
       target_mut = target_mut,
@@ -169,9 +156,6 @@ run_all <- function(
     results$circos_adjusted <- NULL
   }
   
-  # ============================================================
-  # Summary
-  # ============================================================
   end_time <- Sys.time()
   elapsed <- round(as.numeric(difftime(end_time, start_time, units = "secs")), 2)
   

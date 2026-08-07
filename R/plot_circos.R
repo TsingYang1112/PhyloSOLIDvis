@@ -1,8 +1,9 @@
 #' Plot circular phylogenetic tree
 #'
-#' @param inputpath Path to input data directory
+#' @param inputpath Path to input data directory (optional if data provided)
 #' @param outputpath Path to output directory
-#' @param annotation_file Path to annotation file (optional)
+#' @param data A PhyloData object (optional). If provided, uses this instead of reading files.
+#' @param annotation_file Path to annotation file (optional, overrides data annotations)
 #' @param target_mut Target mutation to highlight (default: "no")
 #' @param selected_mutlist Selected mutations (default: "all")
 #' @param manual_fp_file Manual false positive file (default: "no")
@@ -16,11 +17,12 @@
 #' @param plot_width Plot width (default: 18)
 #' @param verbose Print progress (default: TRUE)
 #'
-#' @return Invisible list with plot results
+#' @return Invisible list with plot results including clone_order_tree
 #' @export
 plot_circos <- function(
-    inputpath,
+    inputpath = NULL,
     outputpath,
+    data = NULL,
     annotation_file = NULL,
     target_mut = "no",
     selected_mutlist = "all",
@@ -52,60 +54,83 @@ plot_circos <- function(
     if (verbose) message("Created output directory: ", outputpath)
   }
   
-  # Set file paths
-  inputfile <- file.path(inputpath, "final_cleaned_I_full_withNA3_for_circosPlot.txt")
-  cffile <- file.path(inputpath, "final_cleaned_M_full_basedPivots.filtered_sites_inferred.CFMatrix")
-  features_file <- file.path(inputpath, "df_flipping_count_for_each_mut.txt")
-  total_flipping_file <- file.path(inputpath, "df_total_flipping_count.txt")
+  # ==================== Get data ====================
+  use_prepared_data <- !is.null(data) && is_PhyloData(data)
   
-  # Validate input files (annotation_file is optional)
-  required_files <- c(inputfile, cffile, features_file, total_flipping_file)
-  missing_files <- required_files[!file.exists(required_files)]
-  if (length(missing_files) > 0) {
-    stop("Required files not found:\n", paste("  -", missing_files, collapse = "\n"))
+  if (use_prepared_data) {
+    if (verbose) message("Using provided PhyloData object")
+    
+    cf_table <- data$sorted_cf
+    input_table <- data$input_table
+    tree <- data$tree
+    tree_data <- data$tree_data
+    zero_barcodes <- data$zero_barcodes
+    annotations <- data$annotations
+    cf_tableno0 <- data$tree_no0
+    total_flipping <- data$total_flipping
+    
+    if (verbose) message("  - Using cached data from PhyloData object")
+    
+  } else if (!is.null(inputpath)) {
+    # Original file-based logic - also use outputpath for .no0
+    if (verbose) message("Reading from files: ", inputpath)
+    
+    inputfile <- file.path(inputpath, "final_cleaned_I_full_withNA3_for_circosPlot.txt")
+    cffile <- file.path(inputpath, "final_cleaned_M_full_basedPivots.filtered_sites_inferred.CFMatrix")
+    features_file <- file.path(inputpath, "df_flipping_count_for_each_mut.txt")
+    total_flipping_file <- file.path(inputpath, "df_total_flipping_count.txt")
+    
+    required_files <- c(inputfile, cffile, features_file, total_flipping_file)
+    missing_files <- required_files[!file.exists(required_files)]
+    if (length(missing_files) > 0) {
+      stop("Required files not found:\n", paste("  -", missing_files, collapse = "\n"))
+    }
+    
+    if (verbose) message("\n[1/6] Reading input files...")
+    raw_cf_table <- read.table(cffile, header = TRUE, sep = "\t", row.names = 1)
+    if (verbose) message("  - CF matrix: ", nrow(raw_cf_table), " cells, ", ncol(raw_cf_table), " mutations")
+    
+    if (verbose) message("\n[2/6] Sorting mutation matrix...")
+    cf_table <- sort_mutation_matrix(raw_cf_table)
+    
+    raw_input_table <- read.table(inputfile, header = TRUE, sep = "\t", row.names = 1)
+    input_table <- raw_input_table[match(rownames(cf_table), rownames(raw_input_table)), 
+                                    match(colnames(cf_table), colnames(raw_input_table))]
+    
+    zero_barcodes <- find_zero_barcode(cf_table)
+    
+    if (verbose) message("\n[3/6] Building phylogenetic tree...")
+    # Generate .no0 file in outputpath
+    cffile_no0 <- remove_zero_barcode(cffile, output_dir = outputpath)
+    cf_tableno0 <- read.table(cffile_no0, header = TRUE, sep = "\t")
+    if (verbose) message("  - Spots drawn: ", dim(cf_tableno0)[1])
+    
+    tree_data <- converTree::cf2treedata(cffile_no0)
+    tree <- dat2tree(tree_data)
+    if (verbose) message("  - Tree: ", ape::Ntip(tree), " tips, ", ape::Nnode(tree), " nodes")
+    
+    total_flipping <- read.table(total_flipping_file, header = TRUE, sep = "\t")
+    colnames(total_flipping) <- c("total_flipping_1_to_0", "total_flipping_0_to_1", 
+                                   "total_flipping_NA_to_0", "total_flipping_NA_to_1")
+    
+    annotations <- NULL
+    if (!is.null(annotation_file) && file.exists(annotation_file)) {
+      df_all_info <- read.table(annotation_file, header = TRUE, sep = "\t")
+      annotations <- process_annotations_with_zero(df_all_info, zero_barcodes)
+    }
+  } else {
+    stop("Either inputpath or data must be provided")
   }
   
-  # Check annotation file if provided
-  if (!is.null(annotation_file) && !file.exists(annotation_file)) {
-    warning("Annotation file not found: ", annotation_file, ". Proceeding without annotations.")
-    annotation_file <- NULL
+  # Check annotation_file override
+  if (!is.null(annotation_file) && file.exists(annotation_file) && !use_prepared_data) {
+    df_all_info <- read.table(annotation_file, header = TRUE, sep = "\t")
+    annotations <- process_annotations_with_zero(df_all_info, zero_barcodes)
   }
   
-  # Read data
-  if (verbose) message("\n[1/6] Reading input files...")
+  # ==================== Process annotations for plot ====================
+  if (verbose) message("\n[4/6] Processing annotations for plot...")
   
-  raw_cf_table <- read.table(cffile, header = TRUE, sep = "\t", row.names = 1)
-  if (verbose) message("  - CF matrix: ", nrow(raw_cf_table), " cells, ", ncol(raw_cf_table), " mutations")
-  
-  # Sort mutation matrix
-  if (verbose) message("\n[2/6] Sorting mutation matrix...")
-  cf_table <- sort_mutation_matrix(raw_cf_table)
-  all_mutid <- colnames(cf_table)
-  
-  # Read input table
-  raw_input_table <- read.table(inputfile, header = TRUE, sep = "\t", row.names = 1)
-  input_table <- raw_input_table[match(rownames(cf_table), rownames(raw_input_table)), 
-                                  match(colnames(cf_table), colnames(raw_input_table))]
-  
-  # Remove all 0 spots
-  outputree_dat_zero_barcode <- find_zero_barcode(cf_table)
-  
-  # Process cffile
-  cffile_no0 <- remove_zero_barcode(cffile)
-  cf_tableno0 <- read.table(cffile_no0, header = TRUE, sep = "\t")
-  if (verbose) message("  - Spots drawn: ", dim(cf_tableno0)[1])
-  
-  # Build tree
-  if (verbose) message("\n[3/6] Building phylogenetic tree...")
-  tree_dat <- converTree::cf2treedata(cffile_no0)
-  tree <- dat2tree(tree_dat)
-  if (verbose) message("  - Tree: ", ape::Ntip(tree), " tips, ", ape::Nnode(tree), " nodes")
-  
-  # Process annotations (optional)
-  if (verbose) message("\n[4/6] Processing annotations...")
-  
-  # Initialize empty annotation data structures
-  anno_color <- c()
   df_cluster <- NULL
   df_celltype <- NULL
   df_sample <- NULL
@@ -119,120 +144,39 @@ plot_circos <- function(
   tumor_breaks <- NULL
   bcell_breaks <- NULL
   
-  if (!is.null(annotation_file) && file.exists(annotation_file)) {
-    df_all_info <- read.table(annotation_file, header = TRUE, sep = "\t")
-    if (verbose) message("  - Loaded annotation file with ", nrow(df_all_info), " entries")
-    
-    # Cell cluster
-    if ("cluster_info" %in% colnames(df_all_info)) {
-      temp_cluster <- df_all_info[, c("barcode", "cluster_info")]
-      temp_cluster$cluster_info <- trimws(as.character(temp_cluster$cluster_info))
-      temp_cluster <- temp_cluster[!temp_cluster$barcode %in% outputree_dat_zero_barcode, ]
-      temp_cluster <- temp_cluster[!is.na(temp_cluster$cluster_info) & temp_cluster$cluster_info != "", ]
-      
-      if (nrow(temp_cluster) > 0) {
-        df_cluster <- data.frame(label = temp_cluster$barcode, cluster = temp_cluster$cluster_info, stringsAsFactors = FALSE)
-        cluster_levels <- sort(unique(df_cluster$cluster))
-        df_cluster$cluster <- factor(df_cluster$cluster, levels = cluster_levels)
-        set.seed(42)
-        df_cluster_color <- grDevices::rgb(runif(length(cluster_levels)), 
-                                           runif(length(cluster_levels)), 
-                                           runif(length(cluster_levels)))
-        names(df_cluster_color) <- cluster_levels
-        anno_color <- c(anno_color, df_cluster_color)
-        if (verbose) message("  - Added cluster annotations (", length(cluster_levels), " clusters)")
-      } else {
-        if (verbose) message("  - No valid cluster data found, skipping")
-      }
+  if (!is.null(annotations)) {
+    if (!is.null(annotations$cluster)) {
+      df_cluster <- annotations$cluster$data
+      df_cluster_color <- annotations$cluster$colors
+      if (verbose) message("  - Added cluster annotations")
     }
-    
-    # Cell type
-    if ("cell_type" %in% colnames(df_all_info)) {
-      temp_celltype <- df_all_info[, c("barcode", "cell_type")]
-      temp_celltype$cell_type <- trimws(as.character(temp_celltype$cell_type))
-      temp_celltype <- temp_celltype[!temp_celltype$barcode %in% outputree_dat_zero_barcode, ]
-      temp_celltype <- temp_celltype[!is.na(temp_celltype$cell_type) & temp_celltype$cell_type != "", ]
-      
-      if (nrow(temp_celltype) > 0) {
-        df_celltype <- data.frame(label = temp_celltype$barcode, celltype = temp_celltype$cell_type, stringsAsFactors = FALSE)
-        celltype_levels <- sort(unique(df_celltype$celltype))
-        df_celltype$celltype <- factor(df_celltype$celltype, levels = celltype_levels)
-        set.seed(142)
-        df_celltype_color <- grDevices::rgb(runif(length(celltype_levels)), 
-                                            runif(length(celltype_levels)), 
-                                            runif(length(celltype_levels)))
-        names(df_celltype_color) <- celltype_levels
-        anno_color <- c(anno_color, df_celltype_color)
-        if (verbose) message("  - Added cell type annotations (", length(celltype_levels), " types)")
-      } else {
-        if (verbose) message("  - No valid cell type data found, skipping")
-      }
+    if (!is.null(annotations$celltype)) {
+      df_celltype <- annotations$celltype$data
+      df_celltype_color <- annotations$celltype$colors
+      if (verbose) message("  - Added cell type annotations")
     }
-    
-    # Sample
-    if ("sample" %in% colnames(df_all_info)) {
-      temp_sample <- df_all_info[, c("barcode", "sample")]
-      temp_sample$sample <- trimws(as.character(temp_sample$sample))
-      temp_sample <- temp_sample[!temp_sample$barcode %in% outputree_dat_zero_barcode, ]
-      temp_sample <- temp_sample[!is.na(temp_sample$sample) & temp_sample$sample != "", ]
-      
-      if (nrow(temp_sample) > 0) {
-        df_sample <- data.frame(label = temp_sample$barcode, sample = temp_sample$sample, stringsAsFactors = FALSE)
-        sample_levels <- unique(df_sample$sample)
-        df_sample_color <- c("#ebb16e", "#b2aad3")[seq_along(sample_levels)]
-        names(df_sample_color) <- sample_levels
-        anno_color <- c(anno_color, df_sample_color)
-        if (verbose) message("  - Added sample annotations (", length(sample_levels), " samples)")
-      } else {
-        if (verbose) message("  - No valid sample data found, skipping")
-      }
+    if (!is.null(annotations$sample)) {
+      df_sample <- annotations$sample$data
+      df_sample_color <- annotations$sample$colors
+      if (verbose) message("  - Added sample annotations")
     }
-    
-    # Tumor score
-    if ("tumor_score" %in% colnames(df_all_info)) {
-      temp_tumor <- df_all_info[, c("barcode", "tumor_score")]
-      temp_tumor$tumor_score <- as.numeric(as.character(temp_tumor$tumor_score))
-      temp_tumor <- temp_tumor[!temp_tumor$barcode %in% outputree_dat_zero_barcode, ]
-      temp_tumor <- temp_tumor[!is.na(temp_tumor$tumor_score), ]
-      
-      if (nrow(temp_tumor) > 0) {
-        df_tumor <- data.frame(label = temp_tumor$barcode, tumor_score = temp_tumor$tumor_score, stringsAsFactors = FALSE)
-        min_value <- min(df_tumor$tumor_score[df_tumor$tumor_score != 0], na.rm = TRUE)
-        max_value <- max(df_tumor$tumor_score, na.rm = TRUE)
-        df_tumor_color <- c("#00a3c4", "#ffebf6", "#ff64be")
-        tumor_breaks <- c(0, min_value, max_value)
-        anno_color <- c(anno_color, df_tumor_color)
-        if (verbose) message("  - Added tumor score annotations")
-      } else {
-        if (verbose) message("  - No valid tumor score data found, skipping")
-      }
+    if (!is.null(annotations$tumor)) {
+      df_tumor <- annotations$tumor$data
+      df_tumor_color <- annotations$tumor$colors
+      tumor_breaks <- annotations$tumor$breaks
+      if (verbose) message("  - Added tumor score annotations")
     }
-    
-    # B cell proportion
-    if ("B_cell_prop" %in% colnames(df_all_info)) {
-      temp_bcell <- df_all_info[, c("barcode", "B_cell_prop")]
-      temp_bcell$B_cell_prop <- as.numeric(as.character(temp_bcell$B_cell_prop))
-      temp_bcell <- temp_bcell[!temp_bcell$barcode %in% outputree_dat_zero_barcode, ]
-      temp_bcell <- temp_bcell[!is.na(temp_bcell$B_cell_prop), ]
-      
-      if (nrow(temp_bcell) > 0) {
-        df_Bcell <- data.frame(label = temp_bcell$barcode, B_cell_prop = temp_bcell$B_cell_prop, stringsAsFactors = FALSE)
-        min_value <- min(df_Bcell$B_cell_prop[df_Bcell$B_cell_prop != 0], na.rm = TRUE)
-        max_value <- max(df_Bcell$B_cell_prop, na.rm = TRUE)
-        median_value <- median(df_Bcell$B_cell_prop, na.rm = TRUE)
-        df_Bcell_color <- c("#F4D166", "#DBE8B4", "#24693D")
-        bcell_breaks <- c(min_value, median_value, max_value)
-        anno_color <- c(anno_color, df_Bcell_color)
-        if (verbose) message("  - Added B cell proportion annotations")
-      } else {
-        if (verbose) message("  - No valid B cell proportion data found, skipping")
-      }
+    if (!is.null(annotations$Bcell)) {
+      df_Bcell <- annotations$Bcell$data
+      df_Bcell_color <- annotations$Bcell$colors
+      bcell_breaks <- annotations$Bcell$breaks
+      if (verbose) message("  - Added B cell proportion annotations")
     }
   } else {
-    if (verbose) message("  - No annotation file provided. Skipping annotation layers.")
+    if (verbose) message("  - No annotations available")
   }
   
-  # Sort cells and identify subclones
+  # ==================== Sort cells and identify subclones ====================
   if (verbose) message("\n[5/6] Identifying subclones...")
   cf_tableno0_for_sorting_mat <- cf_tableno0[, 2:ncol(cf_tableno0), drop = FALSE]
   rownames(cf_tableno0_for_sorting_mat) <- cf_tableno0[, 1]
@@ -253,7 +197,6 @@ plot_circos <- function(
   subclones <- subclone_finder(cf_tableno0_sorted)
   subclones$clone <- unlist(subclones$clone)
   
-  # Prepare subclone info
   subclones_transformed <- tidyr::separate_rows(subclones, cells, sep = ",")
   
   if (!is.null(df_cluster)) {
@@ -264,8 +207,7 @@ plot_circos <- function(
       left_join(df_celltype, by = c("cells" = "label"))
   }
   
-  # Prepare leaf data
-  leaf_df <- tree_dat[tree_dat$label %in% tree$tip.label, ]
+  leaf_df <- tree_data[tree_data$label %in% tree$tip.label, ]
   leaf_df <- leaf_df %>% left_join(subclones_transformed, by = c("label" = "cells"))
   leaf_df$clone[is.na(leaf_df$clone)] <- "root_clone"
   
@@ -275,7 +217,6 @@ plot_circos <- function(
       mutate(target_clone = ifelse(label %in% target_clone, "clone_under_target_mut", "others"))
   }
   
-  # Order cells by clone
   rownames(cf_tableno0_sorted) <- cf_tableno0_sorted$cellIDxmutID
   mutation_mat <- cf_tableno0_sorted[, -1, drop = FALSE]
   leaf_df$mutation_count <- rowSums(mutation_mat[leaf_df$label, , drop = FALSE])
@@ -287,22 +228,19 @@ plot_circos <- function(
   
   clone_order_tree <- ape::rotateConstr(tree, leaf_df$label)
   
-  # Get mutation info
   mutant_cell_size <- data.frame(
     mutant = colnames(cf_tableno0)[-1],
     mutant_cell_size = colSums(cf_tableno0[, -1])
   )
   
-  # Create merged_df and leaf_df_cell_size
   merged_df <- leaf_df %>%
-    left_join(tree_dat, by = c("parent" = "node"))
+    left_join(tree_data, by = c("parent" = "node"))
   
   merged_df2 <- tidyr::separate_rows(merged_df, label.y, sep = "\\|")
   
   leaf_df_cell_size <- merged_df2 %>%
     left_join(mutant_cell_size, by = c("label.y" = "mutant"))
   
-  # Prepare flipping data
   input_table_long <- input_table %>% tibble::as_tibble(rownames = "barcode") %>%
     tidyr::pivot_longer(-barcode, names_to = "mutation", values_to = "input")
   
@@ -320,7 +258,6 @@ plot_circos <- function(
   all_wide <- as.data.frame(all_wide)
   all_mat <- as.matrix(all_wide)
   
-  # Color definitions
   color_define <- structure(c("#2c81be", "#e17259", "#d9d9d9"),
                            names = c("absence", "presence", "missing"))
   
@@ -343,10 +280,9 @@ plot_circos <- function(
   )
   names(colors_after) <- unique_types
   
-  # Prepare sub data
   reordered_heatmap <- cf_tableno0[match(leaf_df$label, cf_tableno0$cellIDxmutID), colnames(cf_table)]
   
-  sub <- all_mat[!rownames(all_mat) %in% outputree_dat_zero_barcode, ]
+  sub <- all_mat[!rownames(all_mat) %in% zero_barcodes, ]
   colnames_order <- colnames(reordered_heatmap)[colnames(reordered_heatmap) %in% colnames(sub)]
   sub <- sub[clone_order_tree$tip.label, colnames_order]
   sub <- as.data.frame(sub)
@@ -355,7 +291,6 @@ plot_circos <- function(
   sub_long <- sub %>%
     pivot_longer(-cellIDxmutID, names_to = "mutants", values_to = "mut_count")
   
-  # Clone colors
   clone_order <- unique(subclones[order(subclones$clone_order, decreasing = TRUE), ]$clone)
   roots_index <- grep("root", clone_order)
   colfunc <- grDevices::colorRampPalette(c("#7b767a", "#a49b95", "#dad7d8"))
@@ -369,7 +304,6 @@ plot_circos <- function(
   clone_color[clone_index] <- clone_color_o
   names(clone_color) <- clone_order
   
-  # Subclone colors
   subclones_transformed2 <- tidyr::separate_rows(subclones, subclone, sep = ",")
   temp_cell_size <- unique(stats::na.omit(leaf_df_cell_size[, c("subclone_num", "mutant_cell_size", "label.y")]))
   subclones_transformed3 <- subclones_transformed2 %>%
@@ -390,7 +324,6 @@ plot_circos <- function(
   subclone_mut_color <- clone_color[clone_subclone_names$clone]
   names(subclone_mut_color) <- clone_subclone_names$label.y
   
-  # Mutation colors
   if (selected_mutlist == "all" | is.na(selected_mutlist)) {
     pivot_muts <- colnames(cf_table)
   } else {
@@ -404,7 +337,6 @@ plot_circos <- function(
   pivot_muts_symbol <- for_sort_symbol$mutants_symbol
   pivot_muts_sub <- for_sort_symbol$mutants
   
-  # Handle manual fp flipping
   if (manual_fp_file == "no") {
     new_colors_before <- colors_before
     new_colors_after <- colors_after
@@ -429,16 +361,12 @@ plot_circos <- function(
   
   labels_dict <- setNames(format_flipping_label(names(new_colors_before)), names(new_colors_before))
   
-  # Create title theme
   title_theme <- ggplot2::element_text(size = 20, colour = "#3c3c3c", angle = 0)
   
-  # Save tree data
   saveRDS(clone_order_tree, file.path(outputpath, "CNVtree_data_clone_order_tree.rds"))
   
-  # Plot tree
   num_cells <- length(clone_order_tree$tip.label)
   
-  # Trim node labels
   clone_order_tree_trim <- clone_order_tree
   max_mutnum_on_one_node <- max(sapply(clone_order_tree$node.label, function(x) {
     if (!is.na(x)) return(length(strsplit(x, "\\|")[[1]]))
@@ -448,7 +376,6 @@ plot_circos <- function(
   clone_order_tree_trim$node.label <- sapply(clone_order_tree_trim$node.label, 
     function(x) trim_label(x, target_mut = target_mut, default_n = max_mutnum_on_one_node))
   
-  # Build tree plot
   if (num_cells >= 72) {
     if (target_mut == "no") {
       No_target_clone_mut_color <- rep("white", length(clone_order_tree_trim$node.label))
@@ -506,7 +433,6 @@ plot_circos <- function(
     }
   }
   
-  # Add cell annotation layers (only if annotation data exists)
   p2_anno <- p1_tree
   
   if (!is.null(df_celltype) && nrow(df_celltype) > 0) {
@@ -572,7 +498,6 @@ plot_circos <- function(
             legend.title = element_text(size = 16), legend.text = element_text(size = 14))
   }
   
-  # Add heatmap
   guide_filp_point <- guide_legend(title = "Genotyper (raw > inferred)", title.position = "top",
                                    override.aes = list(size = 10), ncol = 1, title.theme = title_theme)
   
@@ -622,7 +547,6 @@ plot_circos <- function(
       theme(legend.text = element_text(size = 20), axis.title.x = element_blank(), axis.text.x = element_blank())
   }
   
-  # Get ordered metadata for heatmap
   circostree <- p1_tree$data
   tip_data <- circostree[circostree$isTip, ]
   tip_data$angle <- atan2(tip_data$y, tip_data$x)
@@ -641,7 +565,6 @@ plot_circos <- function(
   write.table(ordered_metadata_for_heatmap_final, file.path(outputpath, "ordered_metadata_for_heatmap.txt"), 
               sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
   
-  # Generate mutation id corresponding to the ordered tip.lables
   df_muts_corresponding_to_ordered_tiplabels <- data.frame(
     cellIDxmutID = ordered_metadata_for_heatmap_final$cellIDxmutID[2:nrow(ordered_metadata_for_heatmap_final)], 
     mutation_in_heatmap = character(nrow(ordered_metadata_for_heatmap_final) - 1)
@@ -663,12 +586,10 @@ plot_circos <- function(
               file.path(outputpath, "df_muts_corresponding_to_ordered_tiplabels_by_anticlockwise.txt"), 
               sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
   
-  # Final plot
   main_plot <- p3_heatmap + theme(plot.margin = unit(c(0, 0, 0, 0), "cm"))
   
   pdf_lastfix <- paste0(format(Sys.time(), "%m%d_%H%M%S"), "_", substr(uuid::UUIDgenerate(), 1, 8))
   
-  # Save main plot
   if (target_mut == "no") {
     svg_filename <- file.path(outputpath, paste0("No_target.circle_tree_output_as_point.", pdf_lastfix, ".svg"))
     pdf_filename <- file.path(outputpath, paste0("No_target.circle_tree_output_as_point.", pdf_lastfix, ".pdf"))
@@ -683,7 +604,6 @@ plot_circos <- function(
   ggplot2::ggsave(filename = pdf_filename, plot = p_final, 
                   width = plot_width * 2, height = plot_height * 2)
   
-  # Save circos annotation legend
   p_legend_circos <- cowplot::plot_grid(cowplot::get_legend(main_plot))
   legend_circos_svg <- file.path(outputpath, "legend_components.circos_annotation.svg")
   legend_circos_pdf <- file.path(outputpath, "legend_components.circos_annotation.pdf")
@@ -692,16 +612,12 @@ plot_circos <- function(
   ggplot2::ggsave(filename = legend_circos_pdf, plot = p_legend_circos, 
                   width = plot_width, height = plot_height)
   
-  # Save total flipping count legend
-  total_flipping <- read.table(total_flipping_file, header = TRUE, sep = "\t")
-  colnames(total_flipping) <- c("total_flipping_0_to_1", "total_flipping_1_to_0", "total_flipping_NA_to_0", "total_flipping_NA_to_1")
-  
   data_total_flipping <- tibble::tibble(
-    type = c("False negative", "False positive", "Fill NA with 0", "Fill NA with 1"),
-    category = c("0>1", "1>0", "NA>0", "NA>1"),
+    type = c("False positive", "False negative", "Fill NA with 0", "Fill NA with 1"),
+    category = c("1>0", "0>1", "NA>0", "NA>1"),
     count = c(
-      total_flipping$total_flipping_0_to_1 %||% 0,
-      total_flipping$total_flipping_1_to_0 %||% 0,
+      total_flipping$total_flipping_1_to_0  %||% 0,
+      total_flipping$total_flipping_0_to_1  %||% 0,
       total_flipping$total_flipping_NA_to_0 %||% 0,
       total_flipping$total_flipping_NA_to_1 %||% 0
     )
@@ -729,7 +645,6 @@ plot_circos <- function(
   ggplot2::ggsave(filename = legend_flipping_pdf, plot = p_legend_total_flipping, 
                   width = plot_width, height = plot_height)
   
-  # End timing
   end_time <- Sys.time()
   if (verbose) {
     message("\n", paste(rep("=", 60), collapse = ""))
@@ -742,6 +657,9 @@ plot_circos <- function(
   invisible(list(
     main_plot = main_plot,
     svg_file = svg_filename,
-    pdf_file = pdf_filename
+    pdf_file = pdf_filename,
+    clone_order_tree = clone_order_tree,
+    leaf_df = leaf_df,
+    subclones = subclones
   ))
 }

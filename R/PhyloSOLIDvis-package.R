@@ -31,6 +31,15 @@
 #' @importFrom ggtree ggtree geom_tree theme_tree2 get_taxa_name
 #' @importFrom ggplot2 theme element_blank margin coord_cartesian
 #' @export run_all
+#' @export prepare_data
+#' @export plot_circos
+#' @export plot_heatmap
+#' @export order_matrix
+#' @export sort_mutation_matrix
+#' @export subclone_finder
+#' @export dat2tree
+#' @export is_PhyloData
+#' @export print.PhyloData
 
 ## usethis namespace: end
 NULL

@@ -4,7 +4,7 @@
 \alias{remove_zero_barcode}
 \title{Remove zero barcodes from CF matrix}
 \usage{
-remove_zero_barcode(cffile)
+remove_zero_barcode(cffile, output_dir = NULL)
 }
 \description{
 Remove zero barcodes from CF matrix

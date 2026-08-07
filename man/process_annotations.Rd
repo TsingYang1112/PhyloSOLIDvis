@@ -2,11 +2,11 @@
 % Please edit documentation in R/utils_internal.R
 \name{process_annotations}
 \alias{process_annotations}
-\title{Process annotations and generate colors}
+\title{Process annotations for plot (backward compatible)}
 \usage{
 process_annotations(df_all_info)
 }
 \description{
-Process annotations and generate colors
+Process annotations for plot (backward compatible)
 }
 \keyword{internal}

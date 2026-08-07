@@ -5,8 +5,9 @@
 \title{Plot circular phylogenetic tree}
 \usage{
 plot_circos(
-  inputpath,
+  inputpath = NULL,
   outputpath,
+  data = NULL,
   annotation_file = NULL,
   target_mut = "no",
   selected_mutlist = "all",
@@ -23,11 +24,13 @@ plot_circos(
 )
 }
 \arguments{
-\item{inputpath}{Path to input data directory}
+\item{inputpath}{Path to input data directory (optional if data provided)}
 
 \item{outputpath}{Path to output directory}
 
-\item{annotation_file}{Path to annotation file (optional)}
+\item{data}{A PhyloData object (optional). If provided, uses this instead of reading files.}
+
+\item{annotation_file}{Path to annotation file (optional, overrides data annotations)}
 
 \item{target_mut}{Target mutation to highlight (default: "no")}
 
@@ -54,7 +57,7 @@ plot_circos(
 \item{verbose}{Print progress (default: TRUE)}
 }
 \value{
-Invisible list with plot results
+Invisible list with plot results including clone_order_tree
 }
 \description{
 Plot circular phylogenetic tree

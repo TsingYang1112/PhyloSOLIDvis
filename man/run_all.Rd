@@ -72,19 +72,6 @@ run_all(
 Invisibly returns a list containing all results
 }
 \description{
-This function runs the complete visualization pipeline in one go:
-\enumerate{
-\item Matrix ordering (order_matrix)
-\item Circular tree plot (plot_circos)
-\item Heatmap (plot_heatmap)
-\item Optional: Adjusted circular tree plot with custom parameters
-}
-}
-\examples{
-\dontrun{
-results <- run_all(
-  inputpath = "path/to/phylo/",
-  outputpath = "path/to/output/"
-)
-}
+This function runs the complete visualization pipeline in one go.
+It now uses a shared PhyloData object to avoid redundant I/O.
 }

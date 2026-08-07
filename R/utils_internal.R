@@ -1,7 +1,19 @@
 #' Remove zero barcodes from CF matrix
 #' @keywords internal
-remove_zero_barcode <- function(cffile) {
-  cffile_no0 <- paste0(cffile, ".no0")
+remove_zero_barcode <- function(cffile, output_dir = NULL) {
+  # Determine output file path
+  if (!is.null(output_dir)) {
+    # Create output directory if it doesn't exist
+    if (!dir.exists(output_dir)) {
+      dir.create(output_dir, recursive = TRUE)
+    }
+    base_name <- basename(cffile)
+    cffile_no0 <- file.path(output_dir, paste0(base_name, ".no0"))
+  } else {
+    # Original behavior: save in same directory
+    cffile_no0 <- paste0(cffile, ".no0")
+  }
+  
   lines <- readLines(cffile)
   filtered_lines <- suppressWarnings(
     lines[c(TRUE, sapply(lines[-1], function(line) {
@@ -12,70 +24,103 @@ remove_zero_barcode <- function(cffile) {
   return(cffile_no0)
 }
 
-#' Process annotations and generate colors
+#' Process annotations and generate colors (with zero barcodes filtering)
 #' @keywords internal
-process_annotations <- function(df_all_info) {
+process_annotations_with_zero <- function(df_all_info, zero_barcodes) {
   result <- list()
   
   if ("cluster_info" %in% colnames(df_all_info)) {
-    df_cluster <- df_all_info[, c("barcode", "cluster_info")]
-    df_cluster$cluster_info <- trimws(as.character(df_cluster$cluster_info))
-    colnames(df_cluster) <- c("label", "cluster")
-    cluster_levels <- sort(unique(df_cluster$cluster))
-    df_cluster$cluster <- factor(df_cluster$cluster, levels = cluster_levels)
-    set.seed(42)
-    df_cluster_color <- grDevices::rgb(
-      runif(length(cluster_levels)), 
-      runif(length(cluster_levels)), 
-      runif(length(cluster_levels))
-    )
-    names(df_cluster_color) <- cluster_levels
-    result$cluster <- list(data = df_cluster, colors = df_cluster_color)
+    temp_cluster <- df_all_info[, c("barcode", "cluster_info")]
+    temp_cluster$cluster_info <- trimws(as.character(temp_cluster$cluster_info))
+    temp_cluster <- temp_cluster[!temp_cluster$barcode %in% zero_barcodes, ]
+    temp_cluster <- temp_cluster[!is.na(temp_cluster$cluster_info) & temp_cluster$cluster_info != "", ]
+    
+    if (nrow(temp_cluster) > 0) {
+      df_cluster <- data.frame(label = temp_cluster$barcode, cluster = temp_cluster$cluster_info, stringsAsFactors = FALSE)
+      cluster_levels <- sort(unique(df_cluster$cluster))
+      df_cluster$cluster <- factor(df_cluster$cluster, levels = cluster_levels)
+      set.seed(42)
+      df_cluster_color <- grDevices::rgb(
+        runif(length(cluster_levels)), 
+        runif(length(cluster_levels)), 
+        runif(length(cluster_levels))
+      )
+      names(df_cluster_color) <- cluster_levels
+      result$cluster <- list(data = df_cluster, colors = df_cluster_color)
+    }
   }
   
   if ("cell_type" %in% colnames(df_all_info)) {
-    df_celltype <- df_all_info[, c("barcode", "cell_type")]
-    df_celltype$cell_type <- trimws(as.character(df_celltype$cell_type))
-    colnames(df_celltype) <- c("label", "celltype")
-    celltype_levels <- sort(unique(df_celltype$celltype))
-    df_celltype$celltype <- factor(df_celltype$celltype, levels = celltype_levels)
-    df_celltype_color <- paletteer::paletteer_d("ggthemes::stata_s1rcolor")[seq_along(celltype_levels)]
-    names(df_celltype_color) <- celltype_levels
-    result$celltype <- list(data = df_celltype, colors = df_celltype_color)
+    temp_celltype <- df_all_info[, c("barcode", "cell_type")]
+    temp_celltype$cell_type <- trimws(as.character(temp_celltype$cell_type))
+    temp_celltype <- temp_celltype[!temp_celltype$barcode %in% zero_barcodes, ]
+    temp_celltype <- temp_celltype[!is.na(temp_celltype$cell_type) & temp_celltype$cell_type != "", ]
+    
+    if (nrow(temp_celltype) > 0) {
+      df_celltype <- data.frame(label = temp_celltype$barcode, celltype = temp_celltype$cell_type, stringsAsFactors = FALSE)
+      celltype_levels <- sort(unique(df_celltype$celltype))
+      df_celltype$celltype <- factor(df_celltype$celltype, levels = celltype_levels)
+      set.seed(142)
+      df_celltype_color <- grDevices::rgb(
+        runif(length(celltype_levels)), 
+        runif(length(celltype_levels)), 
+        runif(length(celltype_levels))
+      )
+      names(df_celltype_color) <- celltype_levels
+      result$celltype <- list(data = df_celltype, colors = df_celltype_color)
+    }
   }
   
   if ("sample" %in% colnames(df_all_info)) {
-    df_sample <- df_all_info[, c("barcode", "sample")]
-    df_sample$sample <- trimws(as.character(df_sample$sample))
-    colnames(df_sample) <- c("label", "sample")
-    sample_levels <- unique(df_sample$sample)
-    df_sample_color <- c("#ebb16e", "#b2aad3")[seq_along(sample_levels)]
-    names(df_sample_color) <- sample_levels
-    result$sample <- list(data = df_sample, colors = df_sample_color)
+    temp_sample <- df_all_info[, c("barcode", "sample")]
+    temp_sample$sample <- trimws(as.character(temp_sample$sample))
+    temp_sample <- temp_sample[!temp_sample$barcode %in% zero_barcodes, ]
+    temp_sample <- temp_sample[!is.na(temp_sample$sample) & temp_sample$sample != "", ]
+    
+    if (nrow(temp_sample) > 0) {
+      df_sample <- data.frame(label = temp_sample$barcode, sample = temp_sample$sample, stringsAsFactors = FALSE)
+      sample_levels <- unique(df_sample$sample)
+      df_sample_color <- c("#ebb16e", "#b2aad3")[seq_along(sample_levels)]
+      names(df_sample_color) <- sample_levels
+      result$sample <- list(data = df_sample, colors = df_sample_color)
+    }
   }
   
   if ("tumor_score" %in% colnames(df_all_info)) {
-    df_tumor <- df_all_info[, c("barcode", "tumor_score")]
-    df_tumor$tumor_score <- as.numeric(as.character(df_tumor$tumor_score))
-    colnames(df_tumor) <- c("label", "tumor_score")
-    result$tumor <- list(
-      data = df_tumor,
-      colors = c("#00a3c4", "#ffebf6", "#ff64be"),
-      breaks = c(0, min(df_tumor$tumor_score[df_tumor$tumor_score != 0]), max(df_tumor$tumor_score))
-    )
+    temp_tumor <- df_all_info[, c("barcode", "tumor_score")]
+    temp_tumor$tumor_score <- as.numeric(as.character(temp_tumor$tumor_score))
+    temp_tumor <- temp_tumor[!temp_tumor$barcode %in% zero_barcodes, ]
+    temp_tumor <- temp_tumor[!is.na(temp_tumor$tumor_score), ]
+    
+    if (nrow(temp_tumor) > 0) {
+      df_tumor <- data.frame(label = temp_tumor$barcode, tumor_score = temp_tumor$tumor_score, stringsAsFactors = FALSE)
+      min_value <- min(df_tumor$tumor_score[df_tumor$tumor_score != 0], na.rm = TRUE)
+      max_value <- max(df_tumor$tumor_score, na.rm = TRUE)
+      result$tumor <- list(
+        data = df_tumor,
+        colors = c("#00a3c4", "#ffebf6", "#ff64be"),
+        breaks = c(0, min_value, max_value)
+      )
+    }
   }
   
   if ("B_cell_prop" %in% colnames(df_all_info)) {
-    df_Bcell <- df_all_info[, c("barcode", "B_cell_prop")]
-    df_Bcell$B_cell_prop <- as.numeric(as.character(df_Bcell$B_cell_prop))
-    colnames(df_Bcell) <- c("label", "B_cell_prop")
-    result$Bcell <- list(
-      data = df_Bcell,
-      colors = c("#F4D166", "#DBE8B4", "#24693D"),
-      breaks = c(min(df_Bcell$B_cell_prop[df_Bcell$B_cell_prop != 0]),
-                 median(df_Bcell$B_cell_prop),
-                 max(df_Bcell$B_cell_prop))
-    )
+    temp_bcell <- df_all_info[, c("barcode", "B_cell_prop")]
+    temp_bcell$B_cell_prop <- as.numeric(as.character(temp_bcell$B_cell_prop))
+    temp_bcell <- temp_bcell[!temp_bcell$barcode %in% zero_barcodes, ]
+    temp_bcell <- temp_bcell[!is.na(temp_bcell$B_cell_prop), ]
+    
+    if (nrow(temp_bcell) > 0) {
+      df_Bcell <- data.frame(label = temp_bcell$barcode, B_cell_prop = temp_bcell$B_cell_prop, stringsAsFactors = FALSE)
+      min_value <- min(df_Bcell$B_cell_prop[df_Bcell$B_cell_prop != 0], na.rm = TRUE)
+      max_value <- max(df_Bcell$B_cell_prop, na.rm = TRUE)
+      median_value <- median(df_Bcell$B_cell_prop, na.rm = TRUE)
+      result$Bcell <- list(
+        data = df_Bcell,
+        colors = c("#F4D166", "#DBE8B4", "#24693D"),
+        breaks = c(min_value, median_value, max_value)
+      )
+    }
   }
   
   return(result)
@@ -258,4 +303,11 @@ trim_label <- function(label_str, target_mut, default_n = 2) {
 #' @keywords internal
 `%||%` <- function(x, y) {
   if (is.null(x)) y else x
+}
+
+#' Process annotations for plot (backward compatible)
+#' @keywords internal
+process_annotations <- function(df_all_info) {
+  # This is kept for backward compatibility
+  process_annotations_with_zero(df_all_info, c())
 }

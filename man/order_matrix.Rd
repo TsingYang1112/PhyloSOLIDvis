@@ -4,16 +4,14 @@
 \alias{order_matrix}
 \title{Order mutation matrix for visualization}
 \usage{
-order_matrix(inputpath, outputpath, verbose = TRUE)
+order_matrix(inputpath = NULL, outputpath, data = NULL, verbose = TRUE)
 }
 \arguments{
-\item{inputpath}{Path to the PhyloSOLID phylo directory containing:
-\itemize{
-\item final_cleaned_M_full_basedPivots.filtered_sites_inferred.CFMatrix
-\item final_cleaned_I_full_withNA3_for_circosPlot.txt
-}}
+\item{inputpath}{Path to the PhyloSOLID phylo directory. If data is provided, this can be NULL.}
 
 \item{outputpath}{Path to output directory for saving sorted files}
+
+\item{data}{A PhyloData object (optional). If provided, uses this instead of reading files.}
 
 \item{verbose}{Print progress messages. Default: TRUE}
 }
@@ -24,6 +22,7 @@ Invisibly returns a list containing:
 \item input_table: The sorted input table
 \item cell_order: Order of cells
 \item mutation_order: Order of mutations
+\item data: PhyloData object if created
 }
 }
 \description{
@@ -33,8 +32,16 @@ the metadata needed for circos and heatmap visualizations.
 }
 \examples{
 \dontrun{
+# Traditional usage
 result <- order_matrix(
   inputpath = "path/to/phylo/",
+  outputpath = "path/to/output/"
+)
+
+# Using prepared data
+data <- prepare_data("path/to/phylo/")
+result <- order_matrix(
+  data = data,
   outputpath = "path/to/output/"
 )
 }

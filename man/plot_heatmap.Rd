@@ -5,8 +5,10 @@
 \title{Plot heatmap from PhyloSOLID output}
 \usage{
 plot_heatmap(
-  inputpath,
+  inputpath = NULL,
   outputpath,
+  data = NULL,
+  tree = NULL,
   ordered_metadata_file = NULL,
   colors = c("#D4E8F0", "#7D2224"),
   na_color = "white",
@@ -18,9 +20,13 @@ plot_heatmap(
 )
 }
 \arguments{
-\item{inputpath}{Path to the PhyloSOLID phylo directory}
+\item{inputpath}{Path to the PhyloSOLID phylo directory (optional if data provided)}
 
 \item{outputpath}{Path to output directory for saving plots}
+
+\item{data}{A PhyloData object (optional). If provided, uses this instead of reading files.}
+
+\item{tree}{A phylo object (optional). If provided, uses this tree instead of building one.}
 
 \item{ordered_metadata_file}{Path to ordered_metadata_for_heatmap.txt file.
 If NULL, will look for it in the outputpath.}
@@ -45,14 +51,4 @@ Invisibly returns the heatmap matrix and the tree object
 }
 \description{
 This function generates a heatmap visualization from PhyloSOLID output files.
-It uses the ordered metadata, CF matrix, and clone information to create
-a publication-ready heatmap with proper cell ordering.
-}
-\examples{
-\dontrun{
-plot_heatmap(
-  inputpath = "results/Org4S15D63/03_tree_building/mutation_integrator/phylo/",
-  outputpath = "figures/heatmap/"
-)
-}
 }
