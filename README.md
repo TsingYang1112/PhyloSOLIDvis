@@ -21,16 +21,57 @@ Below is an example circos plot generated from PhyloSOLID output (351 cells, 17 
 
 ## Installation
 
-### One-line installation (recommended)
+### Recommended: Conda environment (avoids compilation issues)
+
+For users who encounter compilation errors (especially with `igraph`), we recommend using conda:
+
+```bash
+# Create environment with specific R version
+conda create -n phylosolid_env r-base=4.5.3 -c conda-forge
+conda activate phylosolid_env
+
+# Install core dependencies via conda (pre-compiled)
+mamba install -c conda-forge \
+  r-ape r-circlize r-ggplot2 r-dplyr r-tidyr r-cowplot \
+  r-igraph r-readr r-vroom r-v8
+
+# Install Bioconductor packages
+conda install -c bioconda \
+  r-biocmanager r-ggtree r-treeio r-complexheatmap
+
+# Start R and install PhyloSOLIDvis
+R
+```
+
+Then in R:
 
 ```r
+# Install converTree dependency
+remotes::install_github("xiayh17/converTree")
+
+# Install PhyloSOLIDvis
 remotes::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
 ```
 
-### Alternative with devtools
+### Standard R installation
 
 ```r
-devtools::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
+# CRAN packages
+install.packages(c("ape", "circlize", "cowplot", "dplyr", "ggplot2", "tidyr", 
+                   "readr", "vroom", "ggridges", "ggtext", "glue"))
+
+# Bioconductor packages
+BiocManager::install(c("ggtree", "ggtreeExtra", "treeio", "ComplexHeatmap"))
+
+# GitHub packages
+remotes::install_github("xiayh17/converTree")
+remotes::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
+```
+
+### One-line installation (if dependencies are already satisfied)
+
+```r
+remotes::install_github("TsingYang1112/PhyloSOLIDvis", dependencies = TRUE)
 ```
 
 ## Quick Start
@@ -412,6 +453,15 @@ BiocManager::install(c("ggtree", "ggtreeExtra", "treeio", "ComplexHeatmap"))
 remotes::install_github("xiayh17/converTree")
 ```
 
+### R version mismatch issues
+
+If you encounter `undefined symbol: R_getRegisteredNamespace` errors, this indicates packages were compiled under a different R version. Reinstall the problematic packages from source:
+
+```r
+install.packages(c("readr", "vroom"), type = "source")
+remotes::install_github("TsingYang1112/PhyloSOLIDvis")
+```
+
 ## Version History
 
 ### v1.1.0 (2026-08-07)
@@ -448,5 +498,3 @@ MIT © Westlake University
 If you use PhyloSOLID in your research, please cite:
 
 1. Yang, Q. et al. PhyloSOLID: Robust phylogeny reconstruction from single-cell data despite inherent error and sparsity. (2026) doi:10.64898/2026.02.04.703905.
-
-
